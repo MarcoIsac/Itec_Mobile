@@ -1,14 +1,12 @@
-import React from 'react'
-import { SafeAreaProvider } from 'react-native-safe-area-context'
-import { Stack } from 'expo-router'
+import { Stack } from 'expo-router';
 
-export default function RootLayout() {
+export default function Layout() {
     return (
-        <SafeAreaProvider>
-            <Stack>
-                <Stack.Screen name="index" options={{ headerShown: false }} />
-            </Stack>
-        </SafeAreaProvider>
-    )
+        <Stack screenOptions={{ headerShown: false }}>
+            {/* Index este automat prima pagină */}
+            <Stack.Screen name="index" />
+            {/* Fight este pagina a doua */}
+            <Stack.Screen name="fight" />
+        </Stack>
+    );
 }
-
