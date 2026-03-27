@@ -1,0 +1,1106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Add support for camera and SVG-based drawings with new dependencies">
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/.package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/lib/cjs/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/lib/cjs/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/lib/cjs/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/lib/esm/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/lib/esm/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/lib/esm/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@socket.io/component-emitter/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/cors/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/cors/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/cors/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/cors/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/assert.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/assert/strict.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/async_hooks.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/buffer.buffer.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/buffer.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/child_process.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/cluster.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/compatibility/iterators.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/console.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/constants.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/crypto.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/dgram.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/diagnostics_channel.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/dns.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/dns/promises.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/domain.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/events.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/fs.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/fs/promises.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/globals.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/globals.typedarray.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/http.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/http2.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/https.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/inspector.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/inspector.generated.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/inspector/promises.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/module.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/net.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/os.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/path.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/path/posix.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/path/win32.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/perf_hooks.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/process.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/punycode.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/querystring.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/quic.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/readline.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/readline/promises.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/repl.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/sea.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/sqlite.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/stream.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/stream/consumers.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/stream/promises.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/stream/web.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/string_decoder.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/test.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/test/reporters.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/timers.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/timers/promises.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/tls.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/trace_events.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/ts5.6/buffer.buffer.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/ts5.6/compatibility/float16array.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/ts5.6/globals.typedarray.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/ts5.6/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/ts5.7/compatibility/float16array.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/ts5.7/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/tty.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/url.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/util.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/util/types.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/v8.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/vm.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/wasi.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/abortcontroller.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/blob.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/console.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/crypto.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/domexception.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/encoding.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/events.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/fetch.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/importmeta.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/messaging.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/navigator.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/performance.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/storage.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/streams.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/timers.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/web-globals/url.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/worker_threads.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/node/zlib.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/ws/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/ws/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/ws/index.d.mts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/ws/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/@types/ws/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/accepts/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/accepts/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/accepts/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/accepts/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/accepts/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/base64id/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/base64id/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/base64id/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/base64id/lib/base64id.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/base64id/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/lib/read.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/lib/types/json.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/lib/types/raw.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/lib/types/text.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/lib/types/urlencoded.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/lib/utils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/body-parser/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/bytes/History.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/bytes/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/bytes/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/bytes/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/bytes/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/actualApply.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/actualApply.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/applyBind.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/applyBind.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/functionApply.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/functionApply.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/functionCall.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/functionCall.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/reflectApply.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/reflectApply.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bind-apply-helpers/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/call-bound/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-disposition/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-disposition/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-disposition/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-disposition/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-disposition/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-type/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-type/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-type/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-type/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/content-type/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie-signature/History.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie-signature/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie-signature/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie-signature/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie-signature/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie/SECURITY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cookie/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cors/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cors/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cors/lib/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/cors/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/debug/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/debug/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/debug/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/debug/src/browser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/debug/src/common.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/debug/src/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/debug/src/node.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/depd/History.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/depd/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/depd/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/depd/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/depd/lib/browser/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/depd/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/get.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/get.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/set.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/set.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/test/get.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/test/set.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/dunder-proto/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ee-first/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ee-first/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ee-first/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ee-first/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/encodeurl/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/encodeurl/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/encodeurl/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/encodeurl/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/commons.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/commons.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/contrib/base64-arraybuffer.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/contrib/base64-arraybuffer.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/decodePacket.browser.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/decodePacket.browser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/decodePacket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/decodePacket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/encodePacket.browser.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/encodePacket.browser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/encodePacket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/encodePacket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/cjs/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/commons.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/commons.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/contrib/base64-arraybuffer.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/contrib/base64-arraybuffer.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/decodePacket.browser.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/decodePacket.browser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/decodePacket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/decodePacket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/encodePacket.browser.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/encodePacket.browser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/encodePacket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/encodePacket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/build/esm/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io-parser/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/contrib/types.cookie.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/contrib/types.cookie.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/engine.io.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/engine.io.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/parser-v3/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/parser-v3/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/parser-v3/utf8.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/parser-v3/utf8.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/server.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/server.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/socket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/socket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transport.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transport.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports-uws/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports-uws/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports-uws/polling.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports-uws/polling.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports-uws/websocket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports-uws/websocket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/polling-jsonp.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/polling-jsonp.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/polling.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/polling.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/websocket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/websocket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/webtransport.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/transports/webtransport.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/userver.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/build/userver.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/accepts/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/accepts/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/accepts/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/accepts/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/accepts/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-db/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-db/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-db/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-db/db.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-db/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-db/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-types/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-types/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-types/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-types/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/mime-types/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/lib/charset.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/lib/encoding.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/lib/language.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/lib/mediaType.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/node_modules/negotiator/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/engine.io/wrapper.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-define-property/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/eval.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/eval.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/range.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/range.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/ref.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/ref.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/syntax.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/syntax.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/type.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/type.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/uri.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-errors/uri.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/RequireObjectCoercible.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/RequireObjectCoercible.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/ToObject.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/ToObject.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/isObject.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/isObject.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/es-object-atoms/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/escape-html/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/escape-html/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/escape-html/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/escape-html/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/etag/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/etag/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/etag/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/etag/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/etag/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/lib/application.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/lib/express.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/lib/request.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/lib/response.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/lib/utils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/lib/view.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/express/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/finalhandler/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/finalhandler/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/finalhandler/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/finalhandler/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/finalhandler/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/forwarded/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/forwarded/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/forwarded/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/forwarded/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/forwarded/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/fresh/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/fresh/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/fresh/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/fresh/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/fresh/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/.github/SECURITY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/implementation.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/test/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/function-bind/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-intrinsic/test/GetIntrinsic.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/Object.getPrototypeOf.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/Object.getPrototypeOf.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/Reflect.getPrototypeOf.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/Reflect.getPrototypeOf.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/get-proto/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/gOPD.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/gOPD.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/gopd/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/shams.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/shams.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/test/shams/core-js.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/test/shams/get-own-property-symbols.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/test/tests.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/has-symbols/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/hasown/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/http-errors/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/http-errors/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/http-errors/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/http-errors/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/http-errors/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/dbcs-codec.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/dbcs-data.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/internal.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/sbcs-codec.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/sbcs-data-generated.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/sbcs-data.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/tables/big5-added.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/tables/cp936.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/tables/cp949.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/tables/cp950.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/tables/eucjp.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/tables/gb18030-ranges.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/tables/gbk-added.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/tables/shiftjis.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/utf16.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/utf32.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/encodings/utf7.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/lib/bom-handling.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/lib/helpers/merge-exports.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/lib/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/lib/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/lib/streams.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/iconv-lite/types/encodings.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/inherits/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/inherits/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/inherits/inherits.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/inherits/inherits_browser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/inherits/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ipaddr.js/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ipaddr.js/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ipaddr.js/ipaddr.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ipaddr.js/lib/ipaddr.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ipaddr.js/lib/ipaddr.js.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ipaddr.js/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/is-promise/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/is-promise/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/is-promise/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/is-promise/index.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/is-promise/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/is-promise/readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/abs.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/abs.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/constants/maxArrayLength.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/constants/maxArrayLength.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/constants/maxSafeInteger.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/constants/maxSafeInteger.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/constants/maxValue.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/constants/maxValue.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/floor.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/floor.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/isFinite.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/isFinite.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/isInteger.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/isInteger.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/isNaN.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/isNaN.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/isNegativeZero.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/isNegativeZero.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/max.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/max.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/min.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/mod.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/mod.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/pow.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/pow.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/round.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/round.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/sign.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/sign.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/math-intrinsics/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/media-typer/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/media-typer/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/media-typer/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/media-typer/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/media-typer/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/merge-descriptors/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/merge-descriptors/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/merge-descriptors/license" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/merge-descriptors/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/merge-descriptors/readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-db/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-db/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-db/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-db/db.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-db/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-db/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-types/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-types/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-types/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-types/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-types/mimeScore.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/mime-types/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ms/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ms/license.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ms/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ms/readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/lib/charset.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/lib/encoding.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/lib/language.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/lib/mediaType.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/negotiator/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-assign/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-assign/license" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-assign/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-assign/readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/example/all.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/example/circular.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/example/fn.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/example/inspect.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/package-support.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/readme.markdown" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test-core-js.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/bigint.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/browser/dom.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/circular.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/deep.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/element.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/err.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/fakes.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/fn.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/global.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/has.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/holes.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/indent-option.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/inspect.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/lowbyte.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/number.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/quoteStyle.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/toStringTag.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/undef.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/test/values.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/object-inspect/util.inspect.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/on-finished/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/on-finished/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/on-finished/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/on-finished/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/on-finished/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/once/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/once/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/once/once.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/once/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/parseurl/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/parseurl/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/parseurl/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/parseurl/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/parseurl/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/path-to-regexp/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/path-to-regexp/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/path-to-regexp/dist/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/path-to-regexp/dist/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/path-to-regexp/dist/index.js.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/path-to-regexp/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/proxy-addr/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/proxy-addr/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/proxy-addr/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/proxy-addr/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/proxy-addr/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/.editorconfig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/.github/SECURITY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/.github/THREAT_MODEL.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/LICENSE.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/dist/qs.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/eslint.config.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/lib/formats.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/lib/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/lib/parse.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/lib/stringify.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/lib/utils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/test/empty-keys-cases.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/test/parse.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/test/stringify.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/qs/test/utils.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/range-parser/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/range-parser/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/range-parser/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/range-parser/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/range-parser/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/raw-body/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/raw-body/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/raw-body/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/raw-body/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/raw-body/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/router/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/router/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/router/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/router/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/router/lib/layer.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/router/lib/route.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/router/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/safer-buffer/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/safer-buffer/Porting-Buffer.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/safer-buffer/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/safer-buffer/dangerous.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/safer-buffer/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/safer-buffer/safer.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/safer-buffer/tests.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/send/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/send/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/send/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/send/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/serve-static/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/serve-static/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/serve-static/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/serve-static/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/setprototypeof/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/setprototypeof/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/setprototypeof/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/setprototypeof/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/setprototypeof/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/setprototypeof/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/.editorconfig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/list.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-list/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/.editorconfig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-map/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/.editorconfig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel-weakmap/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/.editorconfig" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/.eslintrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/.github/FUNDING.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/.nycrc" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/CHANGELOG.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/test/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/side-channel/tsconfig.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/dist/cluster-adapter.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/dist/cluster-adapter.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/dist/contrib/yeast.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/dist/contrib/yeast.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/dist/in-memory-adapter.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/dist/in-memory-adapter.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/dist/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/dist/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-adapter/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/cjs/binary.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/cjs/binary.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/cjs/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/cjs/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/cjs/is-binary.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/cjs/is-binary.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/cjs/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm-debug/binary.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm-debug/binary.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm-debug/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm-debug/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm-debug/is-binary.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm-debug/is-binary.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm-debug/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm/binary.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm/binary.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm/is-binary.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm/is-binary.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/build/esm/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io-parser/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/Readme.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/client-dist/socket.io.esm.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/client-dist/socket.io.esm.min.js.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/client-dist/socket.io.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/client-dist/socket.io.js.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/client-dist/socket.io.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/client-dist/socket.io.min.js.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/client-dist/socket.io.msgpack.min.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/client-dist/socket.io.msgpack.min.js.map" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/broadcast-operator.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/broadcast-operator.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/client.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/client.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/namespace.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/namespace.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/parent-namespace.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/parent-namespace.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/socket-types.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/socket-types.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/socket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/socket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/typed-events.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/typed-events.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/uws.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/dist/uws.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/accepts/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/accepts/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/accepts/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/accepts/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/accepts/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-db/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-db/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-db/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-db/db.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-db/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-db/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-types/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-types/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-types/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-types/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/mime-types/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/lib/charset.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/lib/encoding.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/lib/language.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/lib/mediaType.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/node_modules/negotiator/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/socket.io/wrapper.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/statuses/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/statuses/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/statuses/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/statuses/codes.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/statuses/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/statuses/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/toidentifier/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/toidentifier/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/toidentifier/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/toidentifier/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/toidentifier/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/type-is/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/type-is/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/type-is/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/type-is/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/type-is/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/agent.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/api.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/balanced-pool.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/cache-interceptor.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/cache.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/client-stats.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/client.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/connector.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/content-type.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/cookies.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/diagnostics-channel.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/dispatcher.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/env-http-proxy-agent.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/errors.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/eventsource.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/fetch.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/formdata.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/global-dispatcher.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/global-origin.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/h2c-client.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/handlers.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/header.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/index.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/interceptors.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/mock-agent.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/mock-call-history.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/mock-client.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/mock-errors.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/mock-interceptor.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/mock-pool.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/patch.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/pool-stats.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/pool.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/proxy-agent.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/readable.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/retry-agent.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/retry-handler.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/round-robin-pool.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/snapshot-agent.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/util.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/utility.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/webidl.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/undici-types/websocket.d.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/unpipe/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/unpipe/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/unpipe/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/unpipe/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/unpipe/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/vary/HISTORY.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/vary/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/vary/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/vary/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/vary/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/wrappy/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/wrappy/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/wrappy/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/wrappy/wrappy.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/LICENSE" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/browser.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/index.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/buffer-util.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/constants.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/event-target.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/extension.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/limiter.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/permessage-deflate.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/receiver.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/sender.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/stream.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/subprotocol.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/validation.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/websocket-server.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/lib/websocket.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/node_modules/ws/wrapper.mjs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/itec-server/server.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ItecOverride/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ItecOverride/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ItecOverride/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="31" />
+    <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;RazvanBontilaO&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/MarcoIsac/Itec_Mobile.git&quot;,
+    &quot;accountId&quot;: &quot;e60dcee4-02cb-4e3d-852c-150358bce672&quot;
+  }
+}</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/ItecOverride/app/index.tsx" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$PROJECT_DIR$/ItecOverride/package.json" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3BXaWPaHpeXMhqRgAmO6SN7MSEc" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "javascript.preferred.runtime.type.id": "node",
+    "junie.onboarding.icon.badge.shown": "true",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_interpreter_path": "/Users/user/Library/Application Support/JetBrains/WebStorm2026.1/node/versions/24.14.1/bin/node",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "settings.javascript.runtime",
+    "to.speed.mode.migration.done": "true",
+    "ts.external.directory.path": "/Users/user/Desktop/iTEC/ItecOverride/node_modules/typescript/lib",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="" />
+      <created>1774637901198</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1774637901198</updated>
+      <workItem from="1774637902564" duration="2943000" />
+      <workItem from="1774641184569" duration="1020000" />
+      <workItem from="1774642210871" duration="910000" />
+    </task>
+    <task id="LOCAL-00001" summary="Update dependencies and simplify TypeScript configuration">
+      <option name="closed" value="true" />
+      <created>1774641225922</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1774641225922</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Add support for camera and SVG-based drawings with new dependencies">
+      <option name="closed" value="true" />
+      <created>1774642440594</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1774642440594</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Update dependencies and simplify TypeScript configuration" />
+    <MESSAGE value="Add support for camera and SVG-based drawings with new dependencies" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add support for camera and SVG-based drawings with new dependencies" />
+  </component>
+</project>
