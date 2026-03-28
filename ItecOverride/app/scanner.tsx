@@ -2,20 +2,20 @@ import {
     ViroARImageMarker,
     ViroARScene,
     ViroARSceneNavigator,
-    ViroARTrackingTargets,
     ViroText
 } from '@reactvision/react-viro';
 import Constants from 'expo-constants';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { PosterId } from './lib/ar-types';
-import { POSTERS, POSTER_MAP, VIRO_TARGETS } from './lib/posters';
+import { POSTERS, POSTER_MAP } from './lib/posters';
+import { ensureViroTargets } from './lib/viro-init';
 
-ViroARTrackingTargets.createTargets(VIRO_TARGETS);
+ensureViroTargets();
 
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
 
@@ -159,16 +159,32 @@ function LegacyScannerScreen() {
 export default function ScannerScreen() {
     const router = useRouter();
     const [permission, requestPermission] = useCameraPermissions();
+    const [isTransitioning, setIsTransitioning] = useState(false);
     const isNavigatingRef = useRef(false);
+    const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    useEffect(() => () => {
+        if (transitionTimerRef.current) {
+            clearTimeout(transitionTimerRef.current);
+        }
+    }, []);
 
     const openPoster = (posterId: PosterId) => {
         if (isNavigatingRef.current) return;
 
         isNavigatingRef.current = true;
-        router.replace({
-            pathname: '/drawScreen',
-            params: { posterId },
-        });
+        setIsTransitioning(true);
+
+        if (transitionTimerRef.current) {
+            clearTimeout(transitionTimerRef.current);
+        }
+
+        transitionTimerRef.current = setTimeout(() => {
+            router.replace({
+                pathname: '/drawScreen',
+                params: { posterId },
+            });
+        }, 180);
     };
 
     if (!permission) {
@@ -195,6 +211,8 @@ export default function ScannerScreen() {
         <View style={styles.container}>
             {isExpoGo ? (
                 <CameraView facing="back" style={StyleSheet.absoluteFill} />
+            ) : isTransitioning ? (
+                <View style={[StyleSheet.absoluteFill, styles.transitionBackdrop]} />
             ) : (
                 <ViroARSceneNavigator
                     autofocus
@@ -443,5 +461,8 @@ const styles = StyleSheet.create({
         borderTopWidth: 4,
         right: -2,
         top: -2,
+    },
+    transitionBackdrop: {
+        backgroundColor: '#000',
     },
 });
