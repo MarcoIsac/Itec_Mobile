@@ -7,7 +7,7 @@ import {
     ViroMaterials,
     ViroPolyline,
     ViroText
-} from '@viro-community/react-viro';
+} from '@reactvision/react-viro';
 import Constants from 'expo-constants';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';

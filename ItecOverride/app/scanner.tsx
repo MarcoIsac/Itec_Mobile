@@ -4,7 +4,7 @@ import {
     ViroARSceneNavigator,
     ViroARTrackingTargets,
     ViroText
-} from '@viro-community/react-viro';
+} from '@reactvision/react-viro';
 import Constants from 'expo-constants';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
