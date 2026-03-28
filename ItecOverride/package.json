@@ -17,7 +17,6 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "@reactvision/react-viro": "^2.53.1",
-    "babel-preset-expo": "^55.0.13",
     "expo": "^55.0.9",
     "expo-camera": "~55.0.11",
     "expo-constants": "~55.0.9",
@@ -49,8 +48,10 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.10",
+    "babel-preset-expo": "^55.0.14-canary-20260328-2049187",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~55.0.0",
+    "react-refresh": "^0.18.0",
     "typescript": "~5.9.2"
   },
   "private": true
