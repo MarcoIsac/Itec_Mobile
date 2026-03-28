@@ -1,10 +1,18 @@
 const fs = require('fs');
-const path = require('path');
 const http = require('http');
+const path = require('path');
 
 const PORT = Number(process.env.PORT || 8787);
 const DATA_DIR = path.join(__dirname, 'data');
 const DATA_FILE = path.join(DATA_DIR, 'posters.json');
+
+const MONGODB_URI = (process.env.MONGODB_URI || '').trim();
+const MONGODB_DB_NAME = process.env.MONGODB_DB_NAME || 'override';
+const MONGODB_COLLECTION = process.env.MONGODB_COLLECTION || 'posters';
+
+let mongoCollectionPromise = null;
+let mongoClient = null;
+let mongoUnavailableLogged = false;
 
 const ensureStorage = () => {
   if (!fs.existsSync(DATA_DIR)) {
@@ -33,24 +41,124 @@ const createEmptyPoster = (posterId) => ({
   updatedAt: new Date(0).toISOString(),
 });
 
-const mergePosterContent = (base, incoming) => {
-  const strokeMap = new Map(base.strokes.map((stroke) => [stroke.id, stroke]));
-  const stickerMap = new Map(base.stickers.map((sticker) => [sticker.id, sticker]));
+const normalizePosterContent = (posterId, payload) => {
+  const base = payload || createEmptyPoster(posterId);
 
-  for (const stroke of incoming.strokes || []) {
+  return {
+    posterId,
+    stickers: Array.isArray(base.stickers) ? base.stickers : [],
+    strokes: Array.isArray(base.strokes) ? base.strokes : [],
+    updatedAt: typeof base.updatedAt === 'string' ? base.updatedAt : new Date().toISOString(),
+  };
+};
+
+const mergePosterContent = (base, incoming) => {
+  const safeBase = normalizePosterContent(base.posterId, base);
+  const safeIncoming = normalizePosterContent(base.posterId, incoming);
+
+  const strokeMap = new Map(safeBase.strokes.map((stroke) => [stroke.id, stroke]));
+  const stickerMap = new Map(safeBase.stickers.map((sticker) => [sticker.id, sticker]));
+
+  for (const stroke of safeIncoming.strokes) {
     strokeMap.set(stroke.id, stroke);
   }
 
-  for (const sticker of incoming.stickers || []) {
+  for (const sticker of safeIncoming.stickers) {
     stickerMap.set(sticker.id, sticker);
   }
 
   return {
-    posterId: incoming.posterId || base.posterId,
+    posterId: safeBase.posterId,
     stickers: [...stickerMap.values()].sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
     strokes: [...strokeMap.values()].sort((left, right) => left.createdAt.localeCompare(right.createdAt)),
-    updatedAt: [base.updatedAt, incoming.updatedAt].filter(Boolean).sort().at(-1) || new Date().toISOString(),
+    updatedAt: [safeBase.updatedAt, safeIncoming.updatedAt].filter(Boolean).sort().at(-1) || new Date().toISOString(),
   };
+};
+
+const logMongoUnavailableOnce = (reason) => {
+  if (mongoUnavailableLogged) return;
+  mongoUnavailableLogged = true;
+  console.error('[storage] MongoDB indisponibil, fallback pe JSON local.', reason);
+};
+
+const getMongoCollection = async () => {
+  if (!MONGODB_URI) {
+    return null;
+  }
+
+  if (mongoCollectionPromise) {
+    return mongoCollectionPromise;
+  }
+
+  mongoCollectionPromise = (async () => {
+    let MongoClient;
+    try {
+      ({ MongoClient } = require('mongodb'));
+    } catch (error) {
+      logMongoUnavailableOnce('Lipseste dependinta "mongodb". Ruleaza npm install.');
+      return null;
+    }
+
+    try {
+      mongoClient = new MongoClient(MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+      });
+      await mongoClient.connect();
+      const collection = mongoClient.db(MONGODB_DB_NAME).collection(MONGODB_COLLECTION);
+      await collection.createIndex({ posterId: 1 }, { unique: true });
+      console.log(`[storage] MongoDB activ: ${MONGODB_DB_NAME}.${MONGODB_COLLECTION}`);
+      return collection;
+    } catch (error) {
+      logMongoUnavailableOnce(error);
+      return null;
+    }
+  })();
+
+  return mongoCollectionPromise;
+};
+
+const readPosterFromFile = (posterId) => {
+  const store = readStore();
+  return normalizePosterContent(posterId, store.posters[posterId]);
+};
+
+const writePosterToFile = (poster) => {
+  const normalized = normalizePosterContent(poster.posterId, poster);
+  const store = readStore();
+  store.posters[normalized.posterId] = normalized;
+  writeStore(store);
+  return normalized;
+};
+
+const readPoster = async (posterId) => {
+  const collection = await getMongoCollection();
+  if (!collection) {
+    return readPosterFromFile(posterId);
+  }
+
+  try {
+    const document = await collection.findOne({ posterId });
+    return normalizePosterContent(posterId, document);
+  } catch (error) {
+    logMongoUnavailableOnce(error);
+    return readPosterFromFile(posterId);
+  }
+};
+
+const writePoster = async (poster) => {
+  const normalized = normalizePosterContent(poster.posterId, poster);
+  const collection = await getMongoCollection();
+  if (!collection) {
+    return writePosterToFile(normalized);
+  }
+
+  try {
+    await collection.updateOne({ posterId: normalized.posterId }, { $set: normalized }, { upsert: true });
+    return normalized;
+  } catch (error) {
+    logMongoUnavailableOnce(error);
+    return writePosterToFile(normalized);
+  }
 };
 
 const sendJson = (response, statusCode, payload) => {
@@ -107,14 +215,17 @@ const server = http.createServer(async (request, response) => {
   const pathParts = url.pathname.split('/').filter(Boolean);
 
   if (request.method === 'GET' && url.pathname === '/health') {
-    sendJson(response, 200, { ok: true, port: PORT });
+    sendJson(response, 200, {
+      ok: true,
+      port: PORT,
+      storage: MONGODB_URI ? 'mongodb-or-fallback' : 'file',
+    });
     return;
   }
 
   if (pathParts[0] === 'api' && pathParts[1] === 'posters' && pathParts[2]) {
     const posterId = pathParts[2];
-    const store = readStore();
-    const current = store.posters[posterId] || createEmptyPoster(posterId);
+    const current = await readPoster(posterId);
 
     if (request.method === 'GET' && pathParts.length === 3) {
       sendJson(response, 200, current);
@@ -123,11 +234,14 @@ const server = http.createServer(async (request, response) => {
 
     if (request.method === 'POST' && pathParts[3] === 'sync') {
       try {
-        const incoming = await parseBody(request);
+        const incomingBody = await parseBody(request);
+        const incoming = normalizePosterContent(posterId, {
+          ...incomingBody,
+          posterId,
+        });
         const merged = mergePosterContent(current, incoming);
-        store.posters[posterId] = merged;
-        writeStore(store);
-        sendJson(response, 200, merged);
+        const saved = await writePoster(merged);
+        sendJson(response, 200, saved);
         return;
       } catch (error) {
         sendJson(response, 400, { error: 'Invalid JSON body.', details: String(error) });
@@ -139,7 +253,31 @@ const server = http.createServer(async (request, response) => {
   sendJson(response, 404, { error: 'Route not found.' });
 });
 
-server.listen(PORT, () => {
+const closeMongoClient = async () => {
+  if (!mongoClient) return;
+  try {
+    await mongoClient.close();
+  } catch {
+    // Ignore shutdown errors
+  }
+};
+
+process.on('SIGINT', async () => {
+  await closeMongoClient();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await closeMongoClient();
+  process.exit(0);
+});
+
+server.listen(PORT, async () => {
   ensureStorage();
+  if (!MONGODB_URI) {
+    console.log('[storage] MONGODB_URI nu este setat. Se foloseste storage local JSON.');
+  } else {
+    await getMongoCollection();
+  }
   console.log(`Override server listening on http://0.0.0.0:${PORT}`);
 });

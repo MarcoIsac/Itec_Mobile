@@ -44,6 +44,15 @@ export default function HomeScreen() {
                         Generate Sticker
                     </Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => router.push('./stickers')}
+                    className="bg-slate-200 w-50 py-5 px-3 rounded-2xl shadow-xl shadow-blue-900 border border-blue-400"
+                >
+                    <Text className="text-slate-900 text-center text-xl font-bold uppercase tracking-widest">
+                        My Stickers
+                    </Text>
+                </TouchableOpacity>
 
             </View>
         </SafeAreaView>

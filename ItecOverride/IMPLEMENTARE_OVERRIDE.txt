@@ -1,32 +1,38 @@
-ItecOverride - explicatii implementare
+ItecOverride - explicatii implementare (update curent)
 
-1. Ce am facut
-- Am refacut scanner-ul astfel incat dupa permisiunea la camera sa ai preview live.
-- In build nativ (`npx expo run:android`) scanner-ul foloseste `@reactvision/react-viro` si detecteaza posterele din `assets/posters`.
-- In `Expo Go` ramane un fallback util pentru preview camera + selectie manuala de poster, deoarece Viro nu poate rula complet in Expo Go.
-- Am refacut `drawScreen` astfel incat sa incarce continutul asociat fiecarui poster, sa permita desen si adaugare de sticker, apoi sa faca submit si persistenta.
-- Stickerul se poate alege din galerie, se poate muta pe preview-ul posterului si se poate mari/micsora inainte de submit.
-- Continutul se salveaza local pe dispozitiv si poate fi sincronizat intre mai multe dispozitive printr-un server simplu inclus in proiect.
+1. Ce am adaugat acum
+- In `index` exista buton nou pentru pagina de stickere salvate (`My Stickers`).
+- Am adaugat ecran nou `app/stickers.tsx` unde vezi toate stickerele generate si salvate local din `generator`.
+- In `drawScreen` ai selector de sursa pentru sticker:
+  - `Din galerie`
+  - stickerele salvate local din generator (cu refresh local)
+- Stickerul ales din lista locala este incarcat in draft si transformat in base64 pentru submit (ramane compatibil cu sync-ul server).
+- Serverul de sincronizare foloseste MongoDB (daca exista `MONGODB_URI`) si are fallback automat pe JSON local daca MongoDB nu este disponibil.
 
 2. Fisiere importante
-- `app/scanner.tsx` - scanare poster, preview camera si intrare in fluxul de desen.
-- `app/drawScreen.tsx` - desen, sticker, preview poster si scena AR.
-- `app/lib/posters.ts` - configuratia comuna pentru cele 10 postere.
-- `app/lib/ar-types.ts` - tipurile pentru strokes/stickers/poster content.
-- `app/lib/ar-store.ts` - persistenta locala + sincronizare optionala cu serverul.
-- `server/server.js` - server HTTP simplu pentru sincronizare intre dispozitive.
+- `app/index.tsx` - buton nou catre galeria locala de stickere.
+- `app/stickers.tsx` - pagina noua pentru vizualizarea stickerelor generate.
+- `app/generator.tsx` - salvare sticker prin util comun.
+- `app/drawScreen.tsx` - selectie sticker din galerie sau din local generator.
+- `app/lib/sticker-storage.ts` - util comun AsyncStorage pentru stickerele generate.
+- `app/lib/ar-store.ts` - persistenta locala + sync la server pentru postere.
+- `server/server.js` - API sync cu storage MongoDB + fallback local.
 
-3. Cum testezi
-- Pentru fluxul AR real: `npx expo run:android`
-- Pentru server: `npm run server`
-- Pentru sincronizare intre dispozitive seteaza variabila:
-  `EXPO_PUBLIC_OVERRIDE_SERVER_URL=http://IP-UL_PC-ULUI:8787`
-- Apoi porneste aplicatia cu aceeasi variabila de mediu pe fiecare dispozitiv/build.
+3. Config pentru colaborare intre toti utilizatorii
+- Backend:
+  - seteaza `MONGODB_URI` catre clusterul MongoDB (Atlas sau self-hosted)
+  - optional: `MONGODB_DB_NAME` (default `override`)
+  - optional: `MONGODB_COLLECTION` (default `posters`)
+  - ruleaza serverul: `npm run server`
+- Aplicatie:
+  - seteaza `EXPO_PUBLIC_OVERRIDE_SERVER_URL` catre URL-ul public al backend-ului (ex: `https://override-api.example.com`)
+  - foloseste aceeasi valoare pentru toate build-urile/dispozitivele
 
-4. Limitari reale
-- Detectia automata a posterelor functioneaza in build nativ, nu in `Expo Go`.
-- In `Expo Go` poti testa preview-ul, UI-ul si fluxul de date, dar nu marker tracking-ul Viro.
-- Pentru colaborare intre dispozitive toate trebuie sa aiba acces la acelasi server local/LAN.
+4. Export/build recomandat
+- Pentru AR real pe Android: `npx expo run:android` (development build) sau build release prin EAS.
+- Pentru release catre utilizatori, seteaza in pipeline-ul de build variabila `EXPO_PUBLIC_OVERRIDE_SERVER_URL` catre backend-ul public.
+- Daca backend-ul nu este public / nu are MongoDB accesibil, utilizatorii vor vedea doar date locale pe dispozitivul lor.
 
-5. Verificare facuta
-- Am rulat `npx tsc --noEmit` si typecheck-ul trece.
+5. Verificare facuta dupa modificari
+- `npx tsc --noEmit` -> OK
+- `npm run lint` -> OK

@@ -15,6 +15,7 @@ export default function RootLayout() {
                 <Stack.Screen name="scanner" />
                 <Stack.Screen name="drawScreen" />
                 <Stack.Screen name="generator" />
+                <Stack.Screen name="stickers" />
             </Stack>
         </SafeAreaProvider>
     )

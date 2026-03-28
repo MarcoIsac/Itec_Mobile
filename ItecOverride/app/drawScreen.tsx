@@ -1,7 +1,8 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -21,6 +22,7 @@ import Svg, { Path } from 'react-native-svg';
 import { getDeviceId, getServerUrl, loadPosterContent, savePosterContent } from './lib/ar-store';
 import type { NormalizedPoint, PosterContent, PosterId, StickerRecord, StrokeRecord } from './lib/ar-types';
 import { isPosterId, POSTER_MAP } from './lib/posters';
+import { loadSavedStickerUris } from './lib/sticker-storage';
 
 type DraftSticker = {
     base64: string;
@@ -271,9 +273,23 @@ export default function DrawScreen() {
     const [tool, setTool] = useState<'draw' | 'sticker'>('draw');
     const [isBusy, setIsBusy] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const [isPreparingSticker, setIsPreparingSticker] = useState(false);
+    const [isLoadingSavedStickers, setIsLoadingSavedStickers] = useState(false);
+    const [savedStickerUris, setSavedStickerUris] = useState<string[]>([]);
     const [lastSync, setLastSync] = useState('');
     const canvasLayoutRef = useRef({ x: 0, y: 0, width: canvasWidth, height: canvasHeight });
     const stickerStartRef = useRef<NormalizedPoint | null>(null);
+
+    const refreshSavedStickers = useCallback(async () => {
+        setIsLoadingSavedStickers(true);
+        const saved = await loadSavedStickerUris();
+        setSavedStickerUris([...saved].reverse());
+        setIsLoadingSavedStickers(false);
+    }, []);
+
+    useEffect(() => {
+        void refreshSavedStickers();
+    }, [refreshSavedStickers]);
 
     useEffect(() => {
         if (!posterId) return;
@@ -393,37 +409,112 @@ export default function DrawScreen() {
         },
     }), [draftSticker, tool]);
 
-    const pickSticker = async () => {
+    const createDraftSticker = (params: { base64: string; mimeType: string; ratio: number; uri: string }) => {
+        setDraftSticker({
+            base64: params.base64,
+            height: 0.2,
+            id: createId('draft-sticker'),
+            imageUri: params.uri,
+            mimeType: params.mimeType,
+            position: { x: 0.5, y: 0.5 },
+            scale: 1,
+            uri: params.uri,
+            width: clamp(0.2 * params.ratio, 0.12, 0.45),
+        });
+        setTool('sticker');
+    };
+
+    const resolveImageRatio = (uri: string) =>
+        new Promise<number>((resolve) => {
+            Image.getSize(
+                uri,
+                (width, height) => resolve(width && height ? width / height : 1),
+                () => resolve(1),
+            );
+        });
+
+    const resolveMimeType = (uri: string) => {
+        const lowerUri = uri.toLowerCase();
+        if (lowerUri.endsWith('.png')) return 'image/png';
+        if (lowerUri.endsWith('.webp')) return 'image/webp';
+        return 'image/jpeg';
+    };
+
+    const loadStickerBase64FromUri = async (uri: string) => {
+        let resolvedUri = uri;
+
+        if (uri.startsWith('http://') || uri.startsWith('https://')) {
+            const baseDir = FileSystem.cacheDirectory ?? FileSystem.documentDirectory;
+            if (!baseDir) {
+                throw new Error('No writable local directory available');
+            }
+
+            const extension = uri.toLowerCase().includes('.png') ? 'png' : 'jpg';
+            const downloadTarget = `${baseDir}sticker-cache-${Date.now()}.${extension}`;
+            const downloaded = await FileSystem.downloadAsync(uri, downloadTarget);
+            resolvedUri = downloaded.uri;
+        }
+
+        const base64 = await FileSystem.readAsStringAsync(resolvedUri, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
+
+        return {
+            base64,
+            mimeType: resolveMimeType(resolvedUri),
+            uri: resolvedUri,
+        };
+    };
+
+    const pickStickerFromGallery = async () => {
         const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (!permission.granted) {
             Alert.alert('Permisiune necesara', 'Trebuie permis accesul la galerie pentru a adauga stickere.');
             return;
         }
 
-        const result = await ImagePicker.launchImageLibraryAsync({
-            allowsEditing: true,
-            base64: true,
-            mediaTypes: ['images'],
-            quality: 0.75,
-        });
+        setIsPreparingSticker(true);
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                allowsEditing: true,
+                base64: true,
+                mediaTypes: ['images'],
+                quality: 0.75,
+            });
 
-        if (result.canceled || !result.assets[0]?.base64) return;
+            if (result.canceled || !result.assets[0]?.base64) return;
 
-        const asset = result.assets[0];
-        const ratio = asset.width && asset.height ? asset.width / asset.height : 1;
+            const asset = result.assets[0];
+            const base64 = asset.base64;
+            if (!base64) return;
+            const ratio = asset.width && asset.height ? asset.width / asset.height : 1;
 
-        setDraftSticker({
-            base64: asset.base64 ?? '',
-            height: 0.2,
-            id: createId('draft-sticker'),
-            imageUri: asset.uri,
-            mimeType: asset.mimeType ?? 'image/jpeg',
-            position: { x: 0.5, y: 0.5 },
-            scale: 1,
-            uri: asset.uri,
-            width: clamp(0.2 * ratio, 0.12, 0.45),
-        });
-        setTool('sticker');
+            createDraftSticker({
+                base64,
+                mimeType: asset.mimeType ?? 'image/jpeg',
+                ratio,
+                uri: asset.uri,
+            });
+        } finally {
+            setIsPreparingSticker(false);
+        }
+    };
+
+    const pickStickerFromSavedLibrary = async (uri: string) => {
+        setIsPreparingSticker(true);
+        try {
+            const [ratio, resolved] = await Promise.all([resolveImageRatio(uri), loadStickerBase64FromUri(uri)]);
+            createDraftSticker({
+                base64: resolved.base64,
+                mimeType: resolved.mimeType,
+                ratio,
+                uri: resolved.uri,
+            });
+        } catch {
+            Alert.alert('Sticker indisponibil', 'Nu am putut incarca stickerul salvat. Incearca altul.');
+        } finally {
+            setIsPreparingSticker(false);
+        }
     };
 
     const nudgeDraftSticker = (deltaX: number, deltaY: number) => {
@@ -466,13 +557,18 @@ export default function DrawScreen() {
             updatedAt: new Date().toISOString(),
         };
 
-        const saved = await savePosterContent(nextContent);
-        setContent(saved);
-        setDraftStrokes([]);
-        setCurrentStroke([]);
-        setDraftSticker(null);
-        setLastSync(new Date().toISOString());
-        setIsSaving(false);
+        try {
+            const saved = await savePosterContent(nextContent);
+            setContent(saved);
+            setDraftStrokes([]);
+            setCurrentStroke([]);
+            setDraftSticker(null);
+            setLastSync(new Date().toISOString());
+        } catch {
+            Alert.alert('Eroare salvare', 'Nu am putut salva modificarile. Incearca din nou.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     if (!posterId || !poster) {
@@ -591,7 +687,7 @@ export default function DrawScreen() {
                                     <Text style={[drawStyles.modeChipText, tool === 'draw' && drawStyles.modeChipTextActive]}>Desen</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    onPress={pickSticker}
+                                    onPress={() => setTool('sticker')}
                                     style={[drawStyles.modeChip, tool === 'sticker' && drawStyles.modeChipActive]}
                                 >
                                     <Text style={[drawStyles.modeChipText, tool === 'sticker' && drawStyles.modeChipTextActive]}>Sticker</Text>
@@ -649,6 +745,53 @@ export default function DrawScreen() {
 
                             {tool === 'sticker' && (
                                 <>
+                                    <Text style={drawStyles.sectionLabel}>Sursa sticker</Text>
+                                    <View style={drawStyles.stickerSourceRow}>
+                                        <TouchableOpacity
+                                            onPress={pickStickerFromGallery}
+                                            style={[drawStyles.scaleButton, drawStyles.sourceButton]}
+                                        >
+                                            <Text style={drawStyles.scaleButtonText}>Din galerie</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => void refreshSavedStickers()}
+                                            style={[drawStyles.scaleButton, drawStyles.sourceButton]}
+                                        >
+                                            <Text style={drawStyles.scaleButtonText}>Refresh local</Text>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {isPreparingSticker && (
+                                        <Text style={drawStyles.stickerHint}>Pregatim sticker-ul selectat...</Text>
+                                    )}
+
+                                    {isLoadingSavedStickers ? (
+                                        <Text style={drawStyles.stickerHint}>Se incarca stickerele salvate...</Text>
+                                    ) : savedStickerUris.length ? (
+                                        <ScrollView
+                                            horizontal
+                                            showsHorizontalScrollIndicator={false}
+                                            contentContainerStyle={drawStyles.savedStickerRow}
+                                        >
+                                            {savedStickerUris.map((uri, index) => {
+                                                const isSelected = draftSticker?.uri === uri;
+                                                return (
+                                                    <TouchableOpacity
+                                                        key={`${uri}-${index}`}
+                                                        onPress={() => void pickStickerFromSavedLibrary(uri)}
+                                                        style={[drawStyles.savedStickerCard, isSelected && drawStyles.savedStickerCardActive]}
+                                                    >
+                                                        <Image source={{ uri }} style={drawStyles.savedStickerThumb} resizeMode="contain" />
+                                                    </TouchableOpacity>
+                                                );
+                                            })}
+                                        </ScrollView>
+                                    ) : (
+                                        <Text style={drawStyles.stickerHint}>
+                                            Nu exista stickere locale salvate din generator.
+                                        </Text>
+                                    )}
+
                                     <Text style={drawStyles.sectionLabel}>Redimensionare sticker</Text>
                                     <View style={drawStyles.stickerScaleRow}>
                                         <TouchableOpacity
@@ -711,7 +854,7 @@ export default function DrawScreen() {
                             )}
 
                             <View style={drawStyles.submitRow}>
-                                <TouchableOpacity onPress={submitChanges} style={drawStyles.primaryAction} disabled={isSaving}>
+                                <TouchableOpacity onPress={submitChanges} style={drawStyles.primaryAction} disabled={isSaving || isPreparingSticker}>
                                     <Text style={drawStyles.primaryActionText}>{isSaving ? 'Se salveaza...' : 'Submit in AR'}</Text>
                                 </TouchableOpacity>
                                 <View style={drawStyles.syncBox}>
@@ -865,6 +1008,29 @@ const drawStyles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
     },
+    savedStickerCard: {
+        alignItems: 'center',
+        backgroundColor: '#0f172a',
+        borderColor: '#1e293b',
+        borderRadius: 12,
+        borderWidth: 1,
+        height: 76,
+        justifyContent: 'center',
+        padding: 4,
+        width: 76,
+    },
+    savedStickerCardActive: {
+        borderColor: '#38bdf8',
+    },
+    savedStickerRow: {
+        gap: 10,
+        paddingBottom: 4,
+        paddingRight: 8,
+    },
+    savedStickerThumb: {
+        height: '100%',
+        width: '100%',
+    },
     scaleButton: {
         backgroundColor: '#0f172a',
         borderColor: '#1e293b',
@@ -912,6 +1078,10 @@ const drawStyles = StyleSheet.create({
     },
     screen: {
         backgroundColor: '#020617',
+        flex: 1,
+    },
+    sourceButton: {
+        alignItems: 'center',
         flex: 1,
     },
     sectionLabel: {
@@ -970,6 +1140,11 @@ const drawStyles = StyleSheet.create({
         flexDirection: 'row',
         gap: 12,
         justifyContent: 'space-between',
+        width: '100%',
+    },
+    stickerSourceRow: {
+        flexDirection: 'row',
+        gap: 12,
         width: '100%',
     },
     submitRow: {

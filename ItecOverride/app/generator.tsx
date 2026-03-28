@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -18,8 +17,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Key used to store the array of saved images
-const STICKERS_STORAGE_KEY = '@saved_stickers_paths';
+import { saveStickerUri } from './lib/sticker-storage';
 
 export default function Generator() {
     const router = useRouter();
@@ -64,10 +62,6 @@ export default function Generator() {
         setSaving(true);
 
         try {
-            // Retrieve the existing array of saved sticker paths
-            const existingData = await AsyncStorage.getItem(STICKERS_STORAGE_KEY);
-            const savedStickers: string[] = existingData ? JSON.parse(existingData) : [];
-
             let finalUriToSave = imageUri;
 
             // Check if we are on a mobile device and FileSystem is available
@@ -85,9 +79,7 @@ export default function Generator() {
                 console.log("Running on Web or FileSystem unavailable. Saving URL directly to AsyncStorage.");
             }
 
-            // Add the final URI (either local file path or web URL) to the array and save it back
-            savedStickers.push(finalUriToSave);
-            await AsyncStorage.setItem(STICKERS_STORAGE_KEY, JSON.stringify(savedStickers));
+            await saveStickerUri(finalUriToSave);
 
             Alert.alert(
                 "Saved Successfully!",
