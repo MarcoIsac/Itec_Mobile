@@ -35,6 +35,15 @@ export default function HomeScreen() {
                         Enter Override
                     </Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                    activeOpacity={0.8}
+                    onPress={() => router.push('./generator')}
+                    className="bg-blue-300 w-50 py-5 my-5 px-3 rounded-2xl shadow-xl shadow-blue-900 border border-blue-400"
+                >
+                    <Text className="text-black text-center text-xl font-bold uppercase tracking-widest">
+                        Generate Sticker
+                    </Text>
+                </TouchableOpacity>
 
             </View>
         </SafeAreaView>

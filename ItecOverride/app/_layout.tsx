@@ -14,6 +14,7 @@ export default function RootLayout() {
                 <Stack.Screen name="index" />
                 <Stack.Screen name="scanner" />
                 <Stack.Screen name="drawScreen" />
+                <Stack.Screen name="generator" />
             </Stack>
         </SafeAreaProvider>
     )
