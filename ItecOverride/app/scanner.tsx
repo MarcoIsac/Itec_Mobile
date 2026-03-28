@@ -8,7 +8,7 @@ import Constants from 'expo-constants';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, InteractionManager, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { PosterId } from './lib/ar-types';
@@ -180,11 +180,13 @@ export default function ScannerScreen() {
         }
 
         transitionTimerRef.current = setTimeout(() => {
-            router.replace({
-                pathname: '/drawScreen',
-                params: { posterId },
+            InteractionManager.runAfterInteractions(() => {
+                router.replace({
+                    pathname: '/drawScreen',
+                    params: { posterId },
+                });
             });
-        }, 180);
+        }, 320);
     };
 
     if (!permission) {
