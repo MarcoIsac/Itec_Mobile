@@ -52,7 +52,7 @@
           }
         }
       ],
-      "@viro-community/react-viro"
+      "@reactvision/react-viro"
     ],
     "experiments": {
       "typedRoutes": true,

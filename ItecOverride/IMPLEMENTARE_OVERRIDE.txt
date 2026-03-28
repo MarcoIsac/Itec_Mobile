@@ -2,7 +2,7 @@ ItecOverride - explicatii implementare
 
 1. Ce am facut
 - Am refacut scanner-ul astfel incat dupa permisiunea la camera sa ai preview live.
-- In build nativ (`npx expo run:android`) scanner-ul foloseste `@viro-community/react-viro` si detecteaza posterele din `assets/posters`.
+- In build nativ (`npx expo run:android`) scanner-ul foloseste `@reactvision/react-viro` si detecteaza posterele din `assets/posters`.
 - In `Expo Go` ramane un fallback util pentru preview camera + selectie manuala de poster, deoarece Viro nu poate rula complet in Expo Go.
 - Am refacut `drawScreen` astfel incat sa incarce continutul asociat fiecarui poster, sa permita desen si adaugare de sticker, apoi sa faca submit si persistenta.
 - Stickerul se poate alege din galerie, se poate muta pe preview-ul posterului si se poate mari/micsora inainte de submit.

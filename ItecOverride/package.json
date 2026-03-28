@@ -16,7 +16,7 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
-    "@viro-community/react-viro": "^2.41.1",
+    "@reactvision/react-viro": "^2.53.1",
     "babel-preset-expo": "^55.0.13",
     "expo": "^55.0.9",
     "expo-camera": "~55.0.11",
