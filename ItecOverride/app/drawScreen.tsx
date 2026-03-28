@@ -339,11 +339,14 @@ export default function DrawScreen() {
         onStartShouldSetPanResponder: () => tool === 'draw',
         onPanResponderGrant: (event) => {
             if (tool !== 'draw') return;
-            setCurrentStroke([normalizeTouchPoint(event.nativeEvent.locationX, event.nativeEvent.locationY)]);
+            const { locationX, locationY } = event.nativeEvent;
+            setCurrentStroke([normalizeTouchPoint(locationX, locationY)]);
         },
         onPanResponderMove: (event) => {
             if (tool !== 'draw') return;
-            setCurrentStroke((previous) => [...previous, normalizeTouchPoint(event.nativeEvent.locationX, event.nativeEvent.locationY)]);
+            const { locationX, locationY } = event.nativeEvent;
+            const nextPoint = normalizeTouchPoint(locationX, locationY);
+            setCurrentStroke((previous) => [...previous, nextPoint]);
         },
         onPanResponderRelease: () => {
             setCurrentStroke((strokePoints) => {
@@ -400,7 +403,7 @@ export default function DrawScreen() {
         const result = await ImagePicker.launchImageLibraryAsync({
             allowsEditing: true,
             base64: true,
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            mediaTypes: ['images'],
             quality: 0.75,
         });
 
