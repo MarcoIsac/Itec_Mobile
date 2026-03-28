@@ -1,5 +1,4 @@
 import { Stack } from 'expo-router';
-import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import "./globals.css";
 
