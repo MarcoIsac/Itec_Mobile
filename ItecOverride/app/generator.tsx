@@ -18,12 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Your Gemini API Key
-const GEMINI_API_KEY = "";
-// Using the FREE gemini-2.5-flash-image model with the generateContent endpoint
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`;
-
-// Key used to store the array of local file paths
+// Key used to store the array of saved images
 const STICKERS_STORAGE_KEY = '@saved_stickers_paths';
 
 export default function Generator() {
@@ -33,7 +28,7 @@ export default function Generator() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    // Generate image using Gemini 2.5 Flash Image
+    // Generate a unique sticker using DiceBear API
     async function generateImage() {
         if (!prompt.trim()) {
             Alert.alert("Missing prompt", "Write a prompt before generating.");
@@ -45,99 +40,64 @@ export default function Generator() {
         Keyboard.dismiss();
 
         try {
-            // Append the desired art style to the user's prompt
-            const finalPrompt = `${prompt}, cyberpunk graffiti sticker, neon, highly detailed vector art, solid dark background`;
+            const encodedPrompt = encodeURIComponent(prompt);
+            const apiUrl = `https://api.dicebear.com/9.x/bottts/png?seed=${encodedPrompt}&size=512`;
 
-            // Payload structure for Gemini 2.5 Flash Image using generateContent
-            const requestBody = {
-                contents: [
-                    {
-                        parts: [
-                            { text: finalPrompt }
-                        ]
-                    }
-                ],
-                generationConfig: {
-                    // Explicitly tell the model to return an image instead of text
-                    responseModalities: ["IMAGE"]
-                }
-            };
+            const response = await fetch(apiUrl);
 
-            const response = await fetch(GEMINI_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(requestBody)
-            });
-
-            const data = await response.json();
-
-            // Handle errors from Google's API
             if (!response.ok) {
-                throw new Error(data.error?.message || `API error: ${response.status}`);
+                throw new Error(`API error: ${response.status}`);
             }
 
-            // Navigate the nested response to extract the Base64 image data
-            const part = data.candidates[0].content.parts[0];
-
-            if (!part.inlineData || !part.inlineData.data) {
-                throw new Error("The API did not return valid image data.");
-            }
-
-            const base64Image = part.inlineData.data;
-            const mimeType = part.inlineData.mimeType || "image/jpeg";
-
-            // Format it to be displayable in React Native's Image component
-            const dataUrl = `data:${mimeType};base64,${base64Image}`;
-
-            setImageUri(dataUrl);
+            setImageUri(apiUrl);
             setLoading(false);
         } catch (error: any) {
             console.error(error);
-            Alert.alert("Generation Error", error.message || "Could not generate the image.");
+            Alert.alert("Error", "Could not fetch the image. Check your internet connection.");
             setLoading(false);
         }
     }
 
-    // Save the image locally to App Storage
-    async function saveToLocalAppStorage() {
+    // Save the displayed image 
+    async function saveImage() {
         if (!imageUri) return;
         setSaving(true);
 
         try {
-            // Extract the base64 string from the data URL
-            const base64Code = imageUri.split("base64,")[1];
-
-            // Create a unique filename
-            const fileName = `sticker_${Date.now()}.jpg`;
-
-            // Cast FileSystem to 'any' to bypass the strict TypeScript check for documentDirectory
-            const documentDir = (FileSystem as any).documentDirectory;
-            const fileUri = `${documentDir}${fileName}`;
-
-            // Write the actual image file to the local file system
-            await FileSystem.writeAsStringAsync(fileUri, base64Code, {
-                encoding: 'base64'
-            });
-
-            // Retrieve the existing array of saved sticker paths from AsyncStorage
+            // Retrieve the existing array of saved sticker paths
             const existingData = await AsyncStorage.getItem(STICKERS_STORAGE_KEY);
             const savedStickers: string[] = existingData ? JSON.parse(existingData) : [];
 
-            // Add the new file path to the array and save it back
-            savedStickers.push(fileUri);
+            let finalUriToSave = imageUri;
+
+            // Check if we are on a mobile device and FileSystem is available
+            const storageDir = (FileSystem as any).documentDirectory || (FileSystem as any).cacheDirectory;
+
+            if (Platform.OS !== 'web' && storageDir) {
+                // If on mobile, download the file physically to the device
+                const fileName = `sticker_${Date.now()}.png`;
+                const fileUri = `${storageDir}${fileName}`;
+                const downloadResult = await FileSystem.downloadAsync(imageUri, fileUri);
+                finalUriToSave = downloadResult.uri;
+            } else {
+                // If on Web or FileSystem is unavailable, we just save the URL string directly.
+                // This guarantees the save function works 100% of the time.
+                console.log("Running on Web or FileSystem unavailable. Saving URL directly to AsyncStorage.");
+            }
+
+            // Add the final URI (either local file path or web URL) to the array and save it back
+            savedStickers.push(finalUriToSave);
             await AsyncStorage.setItem(STICKERS_STORAGE_KEY, JSON.stringify(savedStickers));
 
             Alert.alert(
-                "Saved Locally!",
-                "The sticker was saved inside the app storage successfully.",
+                "Saved Successfully!",
+                "The sticker has been added to your gallery.",
                 [{ text: "OK", onPress: () => router.back() }]
             );
 
         } catch (error) {
             console.error("Save error:", error);
-            Alert.alert("Error", "Could not save the image locally.");
+            Alert.alert("Error", "Could not save the image.");
         } finally {
             setSaving(false);
         }
@@ -161,27 +121,31 @@ export default function Generator() {
                         </TouchableOpacity>
 
                         <View style={styles.statusPill}>
-                            <Text style={styles.statusPillText}>API: Gemini 2.5 Flash</Text>
+                            <Text style={styles.statusPillText}>API: DiceBear (Stable)</Text>
                         </View>
                     </View>
 
                     <View style={styles.headerCard}>
                         <Text style={styles.title}>Sticker Generator</Text>
-                        <Text style={styles.subtitle}>Generate and save directly to your app's internal storage.</Text>
+                        <Text style={styles.subtitle}>Generate robot stickers instantly and save them.</Text>
                     </View>
 
                     <View style={styles.previewBox}>
                         {loading ? (
                             <View style={styles.loadingWrapper}>
                                 <ActivityIndicator size="large" color="#38bdf8" />
-                                <Text style={styles.loadingText}>Generating AI image...</Text>
+                                <Text style={styles.loadingText}>Fetching image...</Text>
                             </View>
                         ) : imageUri ? (
-                            <Image source={{ uri: imageUri }} style={styles.img} resizeMode="contain" />
+                            <Image
+                                source={{ uri: imageUri }}
+                                style={styles.img}
+                                resizeMode="contain"
+                            />
                         ) : (
                             <View style={styles.placeholderContainer}>
                                 <Text style={styles.info}>No sticker generated yet</Text>
-                                <Text style={styles.subInfo}>Write a prompt below to create one.</Text>
+                                <Text style={styles.subInfo}>Type anything below to generate a unique robot.</Text>
                             </View>
                         )}
                     </View>
@@ -189,7 +153,7 @@ export default function Generator() {
                     <View style={styles.inputContainer}>
                         <TextInput
                             style={styles.input}
-                            placeholder="Ex: bold street art fox sticker, blue neon outline"
+                            placeholder="Type any word to generate a unique sticker..."
                             placeholderTextColor="#64748b"
                             value={prompt}
                             onChangeText={setPrompt}
@@ -209,10 +173,10 @@ export default function Generator() {
 
                     <TouchableOpacity
                         style={[styles.saveBtn, (!imageUri || saving) && styles.disabledBtn]}
-                        onPress={saveToLocalAppStorage}
-                        disabled={!imageUri || saving}
+                        onPress={saveImage}
+                        disabled={!imageUri || saving || loading}
                     >
-                        <Text style={styles.saveTextPrimary}>{saving ? 'Saving...' : 'Save to App Storage'}</Text>
+                        <Text style={styles.saveTextPrimary}>{saving ? 'Saving...' : 'Save to App'}</Text>
                     </TouchableOpacity>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -227,8 +191,8 @@ const styles = StyleSheet.create({
     topRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
     backBtn: { backgroundColor: 'rgba(15, 23, 42, 0.88)', borderColor: 'rgba(255,255,255,0.12)', borderRadius: 999, borderWidth: 1, paddingHorizontal: 18, paddingVertical: 10 },
     backText: { color: '#f8fafc', fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
-    statusPill: { backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: 'rgba(56, 189, 248, 0.4)', borderRadius: 999, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
-    statusPillText: { color: '#bae6fd', fontSize: 13, fontWeight: '700' },
+    statusPill: { backgroundColor: 'rgba(22, 163, 74, 0.2)', borderColor: 'rgba(74, 222, 128, 0.4)', borderRadius: 999, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
+    statusPillText: { color: '#bbf7d0', fontSize: 12, fontWeight: '700' },
     headerCard: { backgroundColor: 'rgba(2, 6, 23, 0.82)', borderColor: 'rgba(125, 211, 252, 0.18)', borderRadius: 22, borderWidth: 1, marginBottom: 14, padding: 16 },
     title: { color: '#f8fafc', fontSize: 26, fontWeight: '800', marginBottom: 6 },
     subtitle: { color: '#94a3b8', fontSize: 14, lineHeight: 20 },
