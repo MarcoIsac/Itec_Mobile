@@ -2,7 +2,6 @@ import {
     ViroARImageMarker,
     ViroARScene,
     ViroARSceneNavigator,
-    ViroARTrackingTargets,
     ViroImage,
     ViroMaterials,
     ViroPolyline,
@@ -31,9 +30,10 @@ import Svg, { Path } from 'react-native-svg';
 
 import { getDeviceId, getServerUrl, loadPosterContent, savePosterContent } from './lib/ar-store';
 import type { NormalizedPoint, PosterContent, PosterId, StickerRecord, StrokeRecord } from './lib/ar-types';
-import { isPosterId, POSTER_MAP, VIRO_TARGETS } from './lib/posters';
+import { isPosterId, POSTER_MAP } from './lib/posters';
+import { ensureViroTargets } from './lib/viro-init';
 
-ViroARTrackingTargets.createTargets(VIRO_TARGETS);
+ensureViroTargets();
 
 const isExpoGo = Constants.executionEnvironment === 'storeClient';
 

@@ -9,7 +9,7 @@ export default function RootLayout() {
                 screenOptions={{
                     headerShown: false,
                     gestureEnabled: false,
-                    animation: "fade",
+                    animation: "none",
                 }}>
                 <Stack.Screen name="index" />
                 <Stack.Screen name="scanner" />
