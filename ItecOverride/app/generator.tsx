@@ -1,14 +1,13 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
     Image,
     Keyboard,
     KeyboardAvoidingView,
-    Linking,
     Platform,
     ScrollView,
     StyleSheet,
@@ -20,8 +19,11 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const HF_API_KEY = "";
-// Fallback to a highly available, older stable diffusion model to avoid 410 errors on free tier
-const MODEL_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1";
+// Using SDXL-Turbo: it is faster, lighter, and more likely to be available on the free tier
+const MODEL_URL = "https://api-inference.huggingface.co/models/stabilityai/sdxl-turbo";
+
+// Key used to store the array of local file paths
+const STICKERS_STORAGE_KEY = '@saved_stickers_paths';
 
 const blobToDataUrl = (blob: Blob) =>
     new Promise<string>((resolve, reject) => {
@@ -37,33 +39,11 @@ export default function Generator() {
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [hasPermissions, setHasPermissions] = useState<boolean | null>(null);
-
-    // Check and request media library permissions
-    const checkAndRequestPermissions = async () => {
-        const status = await MediaLibrary.getPermissionsAsync();
-
-        if (status.granted) {
-            setHasPermissions(true);
-            return;
-        }
-
-        if (status.canAskAgain) {
-            const requested = await MediaLibrary.requestPermissionsAsync();
-            setHasPermissions(requested.granted);
-        } else {
-            setHasPermissions(false);
-        }
-    };
-
-    useEffect(() => {
-        void checkAndRequestPermissions();
-    }, []);
 
     // Generate image using Hugging Face API
     async function generateImage() {
         if (!prompt.trim()) {
-            Alert.alert("Missing prompt", "Scrie un prompt inainte de generare.");
+            Alert.alert("Missing prompt", "Write a prompt before generating.");
             return;
         }
 
@@ -83,7 +63,7 @@ export default function Generator() {
                 }),
             });
 
-            // Handle model loading state (Cold Start)
+            // Handle cold start
             if (response.status === 503) {
                 Alert.alert(
                     "Model is loading",
@@ -93,9 +73,9 @@ export default function Generator() {
                 return;
             }
 
-            // Handle deprecated or missing model
-            if (response.status === 410) {
-                throw new Error("Model is no longer available (410). Try replacing MODEL_URL with a different Hugging Face model.");
+            // Handle deprecated or restricted model
+            if (response.status === 410 || response.status === 403) {
+                throw new Error("API restriction (410/403). Hugging Face might be blocking free access to this model right now.");
             }
 
             if (!response.ok) {
@@ -108,132 +88,93 @@ export default function Generator() {
             setLoading(false);
         } catch (error: any) {
             console.error(error);
-            Alert.alert("Eroare generare", error.message || "Could not generate the image. Check your connection or API key.");
+            Alert.alert("Generation Error", error.message || "Could not generate the image.");
             setLoading(false);
         }
     }
 
-    // Save the AI generated image to the device gallery
-    async function saveToGallery() {
+    // Save the image locally to App Storage (bypass gallery permissions)
+    async function saveToLocalAppStorage() {
         if (!imageUri) return;
         setSaving(true);
 
         try {
-            let fileUriToSave = imageUri;
+            // Extract the base64 string from the data URL
+            const base64Code = imageUri.split("base64,")[1];
 
-            // If the image is a base64 string, write it to a local file first
-            if (imageUri.startsWith("data:image")) {
-                const base64Code = imageUri.split("base64,")[1];
-                const dir = (FileSystem as any).documentDirectory;
-                const filename = dir + `itec-tag-${Date.now()}.png`;
+            // Create a unique filename
+            const fileName = `sticker_${Date.now()}.png`;
 
-                await FileSystem.writeAsStringAsync(filename, base64Code, {
-                    encoding: 'base64'
-                });
-                fileUriToSave = filename;
-            }
+            // Cast FileSystem to 'any' to bypass the strict TypeScript check for documentDirectory
+            const documentDir = (FileSystem as any).documentDirectory;
+            const fileUri = `${documentDir}${fileName}`;
 
-            await MediaLibrary.saveToLibraryAsync(fileUriToSave);
+            // Write the actual image file to the local file system
+            await FileSystem.writeAsStringAsync(fileUri, base64Code, {
+                encoding: 'base64'
+            });
+
+            // Retrieve the existing array of saved sticker paths from AsyncStorage
+            const existingData = await AsyncStorage.getItem(STICKERS_STORAGE_KEY);
+            const savedStickers: string[] = existingData ? JSON.parse(existingData) : [];
+
+            // Add the new file path to the array and save it back
+            savedStickers.push(fileUri);
+            await AsyncStorage.setItem(STICKERS_STORAGE_KEY, JSON.stringify(savedStickers));
 
             Alert.alert(
-                "Salvat!",
-                "Stickerul este in galerie.",
+                "Saved Locally!",
+                "The sticker was saved inside the app storage successfully.",
                 [{ text: "OK", onPress: () => router.back() }]
             );
 
         } catch (error) {
-            console.error(error);
-            Alert.alert("Error", "Something went wrong while saving the image.");
+            console.error("Save error:", error);
+            Alert.alert("Error", "Could not save the image locally.");
         } finally {
             setSaving(false);
         }
     }
 
-    // Open device settings so user can manually grant permissions
-    async function openSettings() {
-        try {
-            await Linking.openSettings();
-        } catch {
-            Alert.alert("Info", "Could not open settings automatically.");
-        }
-    }
-
-    // --------------------------------------------------------
-    // RENDER: Loading State
-    // --------------------------------------------------------
-    if (hasPermissions === null) {
-        return (
-            <SafeAreaView style={styles.screen}>
-                <View style={styles.loadingState}>
-                    <ActivityIndicator size="large" color="#38bdf8" />
-                    <Text style={styles.loadingStateText}>Verificam permisiunile...</Text>
-                </View>
-            </SafeAreaView>
-        );
-    }
-
-    // --------------------------------------------------------
-    // RENDER: Blocked UI (No Permissions)
-    // --------------------------------------------------------
-    if (!hasPermissions) {
-        return (
-            <SafeAreaView style={styles.screen}>
-                <View style={styles.blockedState}>
-                    <View style={styles.permissionBoxFull}>
-                        <Text style={styles.permissionTitle}>Acces Galerie Necesar</Text>
-                        <Text style={styles.permissionText}>
-                            Pentru a folosi generatorul si a salva stickere, trebuie sa permiti accesul la galerie din setarile telefonului.
-                        </Text>
-                        <TouchableOpacity style={styles.settingsBtn} onPress={openSettings}>
-                            <Text style={styles.settingsBtnText}>Deschide Setari</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.backBtnAlt} onPress={() => router.back()}>
-                            <Text style={styles.backTextAlt}>Inapoi</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </SafeAreaView>
-        );
-    }
-
-    // --------------------------------------------------------
-    // RENDER: Main App Screen (Permissions Granted)
-    // --------------------------------------------------------
     return (
         <SafeAreaView style={styles.screen} edges={['top']}>
-            {/* KeyboardAvoidingView prevents the keyboard from covering the text input */}
+            {/* KeyboardAvoidingView wraps everything to push the ScrollView up when typing */}
             <KeyboardAvoidingView
                 style={styles.keyboardAvoid}
-                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 20}
             >
-                <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+                <ScrollView
+                    contentContainerStyle={styles.container}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
                     <View style={styles.topRow}>
                         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                             <Text style={styles.backText}>Back</Text>
                         </TouchableOpacity>
                         <View style={styles.statusPill}>
-                            <Text style={styles.statusPillText}>Galerie: Activa</Text>
+                            <Text style={styles.statusPillText}>Storage: Local App</Text>
                         </View>
                     </View>
 
                     <View style={styles.headerCard}>
                         <Text style={styles.title}>Sticker Generator</Text>
-                        <Text style={styles.subtitle}>Genereaza cu Hugging Face, previzualizeaza si salveaza direct pe telefon.</Text>
+                        <Text style={styles.subtitle}>Generate and save directly to your app's internal storage.</Text>
                     </View>
 
                     <View style={styles.previewBox}>
                         {loading ? (
                             <View style={styles.loadingWrapper}>
                                 <ActivityIndicator size="large" color="#38bdf8" />
-                                <Text style={styles.loadingText}>Generam imaginea...</Text>
+                                <Text style={styles.loadingText}>Generating AI image...</Text>
                             </View>
                         ) : imageUri ? (
-                            <Image source={{ uri: imageUri }} style={styles.img} />
+                            <Image source={{ uri: imageUri }} style={styles.img} resizeMode="contain" />
                         ) : (
                             <View style={styles.placeholderContainer}>
-                                <Text style={styles.info}>Niciun sticker generat inca</Text>
-                                <Text style={styles.subInfo}>Scrie un prompt mai jos pentru a crea unul.</Text>
+                                <Text style={styles.info}>No sticker generated yet</Text>
+                                <Text style={styles.subInfo}>Write a prompt below to create one.</Text>
                             </View>
                         )}
                     </View>
@@ -255,16 +196,16 @@ export default function Generator() {
                             onPress={generateImage}
                             disabled={loading}
                         >
-                            <Text style={styles.genText}>{loading ? "Generare..." : "Genereaza AI"}</Text>
+                            <Text style={styles.genText}>{loading ? "Generating..." : "Generate AI"}</Text>
                         </TouchableOpacity>
                     </View>
 
                     <TouchableOpacity
                         style={[styles.saveBtn, (!imageUri || saving) && styles.disabledBtn]}
-                        onPress={saveToGallery}
+                        onPress={saveToLocalAppStorage}
                         disabled={!imageUri || saving}
                     >
-                        <Text style={styles.saveTextPrimary}>{saving ? 'Se salveaza...' : 'Salveaza in galerie'}</Text>
+                        <Text style={styles.saveTextPrimary}>{saving ? 'Saving...' : 'Save to App Storage'}</Text>
                     </TouchableOpacity>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -283,68 +224,7 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         padding: 16,
-        paddingBottom: 28,
-    },
-    loadingState: {
-        alignItems: 'center',
-        flex: 1,
-        justifyContent: 'center',
-    },
-    loadingStateText: {
-        color: '#cbd5e1',
-        fontSize: 14,
-        marginTop: 12,
-    },
-    blockedState: {
-        alignItems: 'center',
-        flex: 1,
-        justifyContent: 'center',
-        padding: 20,
-    },
-    permissionBoxFull: {
-        backgroundColor: 'rgba(15, 23, 42, 0.88)',
-        borderColor: 'rgba(248, 113, 113, 0.35)',
-        borderRadius: 18,
-        borderWidth: 1,
-        padding: 24,
-        width: '100%',
-        alignItems: 'center',
-    },
-    permissionTitle: {
-        color: '#fecaca',
-        fontSize: 18,
-        fontWeight: '700',
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    permissionText: {
-        color: '#cbd5e1',
-        fontSize: 14,
-        lineHeight: 22,
-        marginBottom: 24,
-        textAlign: 'center',
-    },
-    settingsBtn: {
-        backgroundColor: '#2563eb',
-        borderRadius: 12,
-        paddingHorizontal: 24,
-        paddingVertical: 14,
-        width: '100%',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    settingsBtnText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '700',
-    },
-    backBtnAlt: {
-        paddingVertical: 10,
-    },
-    backTextAlt: {
-        color: '#94a3b8',
-        fontSize: 14,
-        fontWeight: '600',
+        paddingBottom: 40, // Extra padding at the bottom for keyboard comfort
     },
     topRow: {
         alignItems: 'center',
@@ -404,7 +284,7 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(148, 163, 184, 0.28)',
         borderRadius: 22,
         borderWidth: 1,
-        height: 360,
+        height: 340,
         justifyContent: 'center',
         marginBottom: 16,
         overflow: 'hidden',
@@ -448,7 +328,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         color: '#f8fafc',
         fontSize: 15,
-        minHeight: 88,
+        minHeight: 80,
         padding: 14,
         textAlignVertical: 'top',
     },
