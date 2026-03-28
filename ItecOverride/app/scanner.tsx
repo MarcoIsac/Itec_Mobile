@@ -1,30 +1,117 @@
-import { CameraView, useCameraPermissions } from 'expo-camera';
+/** @jsxImportSource react */
+import {
+    ViroARImageMarker,
+    ViroARScene,
+    ViroARSceneNavigator,
+    ViroARTrackingTargets
+} from '@viro-community/react-viro';
+import { useCameraPermissions } from 'expo-camera';
 import { useRouter } from "expo-router";
-import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function ScannerScreen() {
-    const [permission, requestPermission] = useCameraPermissions();
-    const router = useRouter();
+ViroARTrackingTargets.createTargets({
+    "poster_1": { source: require('../assets/posters/afis1.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_2": { source: require('../assets/posters/afis2.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_3": { source: require('../assets/posters/afis3.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_4": { source: require('../assets/posters/afis4.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_5": { source: require('../assets/posters/afis5.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_6": { source: require('../assets/posters/afis6.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_7": { source: require('../assets/posters/afis7.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_8": { source: require('../assets/posters/afis8.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_9": { source: require('../assets/posters/afis9.jpeg'), orientation: "Up", physicalWidth: 0.3 },
+    "poster_10": { source: require('../assets/posters/afis10.jpeg'), orientation: "Up", physicalWidth: 0.3 }
+});
 
-    // English comment: Ensure hooks are called before any conditional returns
-    if (!permission) {
-        return <View className="flex-1 bg-[#020617]" />;
+const PosterARScene = (props: any) => {
+    const handleAnchorFound = (posterName: string) => {
+        if (props.arSceneNavigator && props.arSceneNavigator.viroAppProps.onPosterFound) {
+            props.arSceneNavigator.viroAppProps.onPosterFound(posterName);
+        }
+    };
+
+    return (
+        <ViroARScene>
+            <ViroARImageMarker target="poster_1" onAnchorFound={() => handleAnchorFound("Poster 1")} />
+            <ViroARImageMarker target="poster_2" onAnchorFound={() => handleAnchorFound("Poster 2")} />
+            <ViroARImageMarker target="poster_3" onAnchorFound={() => handleAnchorFound("Poster 3")} />
+            <ViroARImageMarker target="poster_4" onAnchorFound={() => handleAnchorFound("Poster 4")} />
+            <ViroARImageMarker target="poster_5" onAnchorFound={() => handleAnchorFound("Poster 5")} />
+            <ViroARImageMarker target="poster_6" onAnchorFound={() => handleAnchorFound("Poster 6")} />
+            <ViroARImageMarker target="poster_7" onAnchorFound={() => handleAnchorFound("Poster 7")} />
+            <ViroARImageMarker target="poster_8" onAnchorFound={() => handleAnchorFound("Poster 8")} />
+            <ViroARImageMarker target="poster_9" onAnchorFound={() => handleAnchorFound("Poster 9")} />
+            <ViroARImageMarker target="poster_10" onAnchorFound={() => handleAnchorFound("Poster 10")} />
+        </ViroARScene>
+    );
+};
+
+export default function ScannerScreen() {
+    const router = useRouter();
+    const [permission, requestPermission] = useCameraPermissions();
+    const hasFoundPoster = useRef(false);
+
+    // English comment: Mount shield to prevent Expo Router and state updates from clashing
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        // English comment: This runs strictly after the component has safely mounted
+        setIsMounted(true);
+    }, []);
+
+    const handlePosterDetection = (posterName: string) => {
+        if (hasFoundPoster.current) return;
+        hasFoundPoster.current = true;
+
+        Alert.alert(
+            "Target Acquired!",
+            `Sistemul a detectat: ${posterName}. Inițiem modulul de desenare...`,
+            [
+                {
+                    text: "Continuă",
+                    onPress: () => {
+                        hasFoundPoster.current = false;
+                        router.push('/drawScreen');
+                    }
+                }
+            ],
+            { cancelable: false }
+        );
+    };
+
+    const handleEnableCamera = async () => {
+        if (permission && !permission.canAskAgain) {
+            try {
+                await Linking.openSettings();
+            } catch (error) {
+                Alert.alert(
+                    "Acțiune necesară",
+                    "Nu am putut deschide setările automat. Te rugăm să mergi manual la Setările telefonului -> Aplicații -> Caută aplicația și activează permisiunea pentru Cameră."
+                );
+            }
+        } else {
+            await requestPermission();
+        }
+    };
+
+    // English comment: Do not render ANYTHING heavy or check permissions until safely mounted
+    if (!isMounted || !permission) {
+        return <View style={{ flex: 1, backgroundColor: '#020617' }} />;
     }
 
     if (!permission.granted) {
         return (
-            <SafeAreaView className="flex-1 bg-[#020617]">
-                <View className="flex-1 justify-center items-center p-10">
-                    <Text className="text-blue-100 text-center text-lg mb-8">
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#020617' }}>
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>
+                    <Text style={{ color: '#dbeafe', textAlign: 'center', fontSize: 18, marginBottom: 32 }}>
                         We need your camera to detect the ITEC posters.
                     </Text>
                     <TouchableOpacity
-                        className="bg-blue-600 px-10 py-4 rounded-xl active:bg-blue-700"
-                        onPress={requestPermission}
+                        style={{ backgroundColor: '#2563eb', paddingHorizontal: 40, paddingVertical: 16, borderRadius: 12 }}
+                        onPress={handleEnableCamera}
                     >
-                        <Text className="text-white font-bold">Enable Camera</Text>
+                        <Text style={{ color: 'white', fontWeight: 'bold' }}>Enable Camera</Text>
                     </TouchableOpacity>
                 </View>
             </SafeAreaView>
@@ -32,59 +119,50 @@ export default function ScannerScreen() {
     }
 
     return (
-        <View className="flex-1 bg-black">
-            {/* English comment: Absolute fill for the camera background */}
-            <CameraView
-                facing="back"
+        <View style={{ flex: 1, backgroundColor: 'black' }}>
+            <ViroARSceneNavigator
+                autofocus={true}
+                initialScene={{ scene: PosterARScene as any }}
+                style={StyleSheet.absoluteFill}
+                viroAppProps={{ onPosterFound: handlePosterDetection }}
             />
 
-            {/* Sci-fi Overlay Layer */}
-            <SafeAreaView className="flex-1">
-                <View className="flex-1 bg-blue-950/30 p-8 justify-between">
-
-                    {/* Top Bar */}
-                    <View className="flex-row justify-between items-center">
+            <SafeAreaView style={StyleSheet.absoluteFill} pointerEvents="box-none">
+                <View style={{ flex: 1, backgroundColor: 'rgba(23, 37, 84, 0.3)', padding: 32, justifyContent: 'space-between' }} pointerEvents="box-none">
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                         <TouchableOpacity
                             onPress={() => router.push('/')}
-                            className="bg-black/60 p-3 px-5 rounded-full border border-white/10"
+                            style={{ backgroundColor: 'rgba(0,0,0,0.6)', padding: 12, paddingHorizontal: 20, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}
                         >
-                            <Text className="text-white font-bold text-md uppercase">Back</Text>
+                            <Text style={{ color: 'white', fontWeight: 'bold', textTransform: 'uppercase' }}>Back</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Central Scanning Viewport */}
-                    <View className="items-center justify-center">
-                        <View className="w-72 h-96 border border-blue-400/30 rounded-3xl relative">
-                            {/* Corner Accents - Styled for precision */}
-                            <View className="absolute top-[-2] left-[-2] w-12 h-12 border-t-4 border-l-4 border-blue-400 rounded-tl-3xl" />
-                            <View className="absolute top-[-2] right-[-2] w-12 h-12 border-t-4 border-r-4 border-blue-400 rounded-tr-3xl" />
-                            <View className="absolute bottom-[-2] left-[-2] w-12 h-12 border-b-4 border-l-4 border-blue-400 rounded-bl-3xl" />
-                            <View className="absolute bottom-[-2] right-[-2] w-12 h-12 border-b-4 border-r-4 border-blue-400 rounded-br-3xl" />
-
-                            {/* Scanning Animation Line (Static Placeholder) */}
-                            <View className="w-full h-0.5 bg-blue-400/60 mt-32 shadow-lg shadow-blue-400" />
+                    <View style={{ alignItems: 'center', justifyContent: 'center' }} pointerEvents="none">
+                        <View style={{ width: 288, height: 384, borderWidth: 1, borderColor: 'rgba(96, 165, 250, 0.3)', borderRadius: 24, position: 'relative' }}>
+                            <View style={{ position: 'absolute', top: -2, left: -2, width: 48, height: 48, borderTopWidth: 4, borderLeftWidth: 4, borderColor: '#60a5fa', borderTopLeftRadius: 24 }} />
+                            <View style={{ position: 'absolute', top: -2, right: -2, width: 48, height: 48, borderTopWidth: 4, borderRightWidth: 4, borderColor: '#60a5fa', borderTopRightRadius: 24 }} />
+                            <View style={{ position: 'absolute', bottom: -2, left: -2, width: 48, height: 48, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: '#60a5fa', borderBottomLeftRadius: 24 }} />
+                            <View style={{ position: 'absolute', bottom: -2, right: -2, width: 48, height: 48, borderBottomWidth: 4, borderRightWidth: 4, borderColor: '#60a5fa', borderBottomRightRadius: 24 }} />
+                            <View style={{ width: '100%', height: 2, backgroundColor: 'rgba(96, 165, 250, 0.6)', marginTop: 128 }} />
                         </View>
-
-                        <Text className="text-blue-300 mt-8 font-bold tracking-[4px] text-center text-xs uppercase">
+                        <Text style={{ color: '#93c5fd', marginTop: 32, fontWeight: 'bold', letterSpacing: 4, textAlign: 'center', fontSize: 12, textTransform: 'uppercase' }}>
                             Targeting Poster...
                         </Text>
                     </View>
 
-                    {/* Bottom Button - Routing fix */}
-                    <View className="mb-10 items-center">
+                    <View style={{ marginBottom: 40, alignItems: 'center' }}>
                         <TouchableOpacity
-                            // IMPORTANT: Ensure the string matches your filename exactly (e.g., 'draw' or 'drawScreen')
-                            onPress={() => router.push('/drawScreen')}
-                            className="bg-blue-600/20 border border-blue-400/50 px-10 py-4 rounded-full backdrop-blur-xl active:bg-blue-600/40"
+                            onPress={() => handlePosterDetection("Manual Override Poster")}
+                            style={{ backgroundColor: 'rgba(37, 99, 235, 0.2)', borderWidth: 1, borderColor: 'rgba(96, 165, 250, 0.5)', paddingHorizontal: 40, paddingVertical: 16, borderRadius: 999 }}
                         >
-                            <Text className="text-blue-100 font-black tracking-widest text-xs uppercase">
+                            <Text style={{ color: '#dbeafe', fontWeight: '900', letterSpacing: 2, fontSize: 12, textTransform: 'uppercase' }}>
                                 Simulate Detection
                             </Text>
                         </TouchableOpacity>
                     </View>
-
                 </View>
-            </SafeAreaView>
-        </View>
+            </SafeAreaView >
+        </View >
     );
 }
