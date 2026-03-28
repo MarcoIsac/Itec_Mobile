@@ -1,0 +1,32 @@
+ItecOverride - explicatii implementare
+
+1. Ce am facut
+- Am refacut scanner-ul astfel incat dupa permisiunea la camera sa ai preview live.
+- In build nativ (`npx expo run:android`) scanner-ul foloseste `@viro-community/react-viro` si detecteaza posterele din `assets/posters`.
+- In `Expo Go` ramane un fallback util pentru preview camera + selectie manuala de poster, deoarece Viro nu poate rula complet in Expo Go.
+- Am refacut `drawScreen` astfel incat sa incarce continutul asociat fiecarui poster, sa permita desen si adaugare de sticker, apoi sa faca submit si persistenta.
+- Stickerul se poate alege din galerie, se poate muta pe preview-ul posterului si se poate mari/micsora inainte de submit.
+- Continutul se salveaza local pe dispozitiv si poate fi sincronizat intre mai multe dispozitive printr-un server simplu inclus in proiect.
+
+2. Fisiere importante
+- `app/scanner.tsx` - scanare poster, preview camera si intrare in fluxul de desen.
+- `app/drawScreen.tsx` - desen, sticker, preview poster si scena AR.
+- `app/lib/posters.ts` - configuratia comuna pentru cele 10 postere.
+- `app/lib/ar-types.ts` - tipurile pentru strokes/stickers/poster content.
+- `app/lib/ar-store.ts` - persistenta locala + sincronizare optionala cu serverul.
+- `server/server.js` - server HTTP simplu pentru sincronizare intre dispozitive.
+
+3. Cum testezi
+- Pentru fluxul AR real: `npx expo run:android`
+- Pentru server: `npm run server`
+- Pentru sincronizare intre dispozitive seteaza variabila:
+  `EXPO_PUBLIC_OVERRIDE_SERVER_URL=http://IP-UL_PC-ULUI:8787`
+- Apoi porneste aplicatia cu aceeasi variabila de mediu pe fiecare dispozitiv/build.
+
+4. Limitari reale
+- Detectia automata a posterelor functioneaza in build nativ, nu in `Expo Go`.
+- In `Expo Go` poti testa preview-ul, UI-ul si fluxul de date, dar nu marker tracking-ul Viro.
+- Pentru colaborare intre dispozitive toate trebuie sa aiba acces la acelasi server local/LAN.
+
+5. Verificare facuta
+- Am rulat `npx tsc --noEmit` si typecheck-ul trece.
