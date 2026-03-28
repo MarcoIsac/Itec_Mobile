@@ -1,3 +1,4 @@
+// @ts-ignore
 import { ViroARTrackingTargets } from '@reactvision/react-viro';
 
 import { VIRO_TARGETS } from './posters';

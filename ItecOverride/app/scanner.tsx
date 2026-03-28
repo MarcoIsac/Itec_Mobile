@@ -1,3 +1,4 @@
+// @ts-ignore
 import {
     ViroARImageMarker,
     ViroARScene,
@@ -61,7 +62,7 @@ function LegacyScannerScreen() {
                     text: "Continuă",
                     onPress: () => {
                         hasFoundPoster.current = false;
-                        router.push('/drawScreen');
+                        router.push('/drawScreen' as any);
                     }
                 }
             ],
@@ -182,7 +183,7 @@ export default function ScannerScreen() {
         transitionTimerRef.current = setTimeout(() => {
             InteractionManager.runAfterInteractions(() => {
                 router.replace({
-                    pathname: '/drawScreen',
+                    pathname: '/drawScreen' as any,
                     params: { posterId },
                 });
             });

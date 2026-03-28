@@ -18,10 +18,18 @@ export default function Home() {
                 Revendicați teritoriul. Lăsați-vă amprenta.
             </Text>
 
-            {/* Butonul care te duce în ecranul de Fight */}
+            {/* Noul Buton pentru AI Generator */}
+            <TouchableOpacity
+                style={styles.aiButton}
+                onPress={() => router.push('/generator' as any)}
+            >
+                <Text style={styles.aiButtonText}>AI TAG GENERATOR</Text>
+            </TouchableOpacity>
+
+            {/* Butonul care te duce în ecranul de Scanner/Fight */}
             <TouchableOpacity
                 style={styles.fightButton}
-                onPress={() => router.push('/fight' as any)}
+                onPress={() => router.push('/scanner' as any)}
             >
                 <Text style={styles.fightButtonText}>FIGHT (Scan & Override)</Text>
             </TouchableOpacity>
@@ -37,7 +45,7 @@ export default function Home() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0a0a0a', // Un negru cyberpunk
+        backgroundColor: '#0a0a0a',
         alignItems: 'center',
         justifyContent: 'center',
         padding: 20,
@@ -55,7 +63,7 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: 50,
         fontWeight: '900',
-        color: '#ff003c', // Roșu agresiv
+        color: '#ff003c',
         letterSpacing: 5,
         textShadowColor: '#ff003c',
         textShadowOffset: { width: 0, height: 0 },
@@ -65,11 +73,28 @@ const styles = StyleSheet.create({
         color: '#888',
         textAlign: 'center',
         fontSize: 16,
-        marginBottom: 60,
+        marginBottom: 40,
         lineHeight: 24,
     },
+    aiButton: {
+        backgroundColor: '#00f0ff',
+        paddingVertical: 15,
+        borderRadius: 10,
+        marginBottom: 15,
+        width: '100%',
+        alignItems: 'center',
+        shadowColor: '#00f0ff',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.6,
+        shadowRadius: 10,
+    },
+    aiButtonText: {
+        color: '#000',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
     fightButton: {
-        backgroundColor: '#39ff14', // Verde neon
+        backgroundColor: '#39ff14',
         paddingVertical: 20,
         paddingHorizontal: 40,
         borderRadius: 10,

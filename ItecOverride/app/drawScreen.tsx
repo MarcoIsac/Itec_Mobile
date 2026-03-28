@@ -1,4 +1,5 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
+// @ts-ignore
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -175,7 +176,7 @@ function LegacyDrawScreen() {
                     <View className="absolute top-12 left-4 right-4">
                         <View className="flex-row items-center justify-between">
                             <TouchableOpacity
-                                onPress={() => router.replace('/scanner')}
+                                onPress={() => router.replace('/scanner' as any)}
                                 className="bg-black/60 items-center justify-center rounded-2xl border border-white/20"
                             >
                                 <Text className="text-white text-md m-2">Back to scanner</Text>
@@ -476,7 +477,7 @@ export default function DrawScreen() {
         return (
             <SafeAreaView style={drawStyles.invalidScreen}>
                 <Text style={drawStyles.invalidTitle}>Poster invalid</Text>
-                <TouchableOpacity onPress={() => router.replace('/scanner')} style={drawStyles.primaryAction}>
+                <TouchableOpacity onPress={() => router.replace('/scanner' as any)} style={drawStyles.primaryAction}>
                     <Text style={drawStyles.primaryActionText}>Inapoi la scanner</Text>
                 </TouchableOpacity>
             </SafeAreaView>
@@ -567,7 +568,7 @@ export default function DrawScreen() {
 
                 <SafeAreaView style={StyleSheet.absoluteFill} pointerEvents="box-none">
                     <View style={drawStyles.topControls}>
-                        <TouchableOpacity onPress={() => router.replace('/scanner')} style={drawStyles.floatingButton}>
+                        <TouchableOpacity onPress={() => router.replace('/scanner' as any)} style={drawStyles.floatingButton}>
                             <Text style={drawStyles.floatingButtonText}>Back</Text>
                         </TouchableOpacity>
                         <View style={drawStyles.statusBox}>

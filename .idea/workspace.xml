@@ -4,13 +4,17 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Add initial WebSocket server and client integration for real-time drawing synchronization">
-      <change afterPath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" afterDir="false" />
+    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`.">
+      <change afterPath="$PROJECT_DIR$/ItecOverride/app/lib/generator.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ItecOverride/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ItecOverride/app/drawScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/drawScreen.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ItecOverride/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/index.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ItecOverride/app/lib/viro-init.ts" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/lib/viro-init.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/ItecOverride/app/scanner.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/scanner.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ItecOverride/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package-lock.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/ItecOverride/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/itec-server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/itec-server/server.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -18,7 +22,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="36" />
+    <option name="cachedIndexableFilesCount" value="37" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -29,7 +33,13 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
   </component>
   <component name="GitHubPullRequestSearchHistory">{
   &quot;lastFilter&quot;: {
@@ -44,6 +54,8 @@
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/ItecOverride/app/drawScreen.tsx" root0="SKIP_INSPECTION" />
+    <setting file="file://$PROJECT_DIR$/ItecOverride/app/fight.tsx" root0="SKIP_INSPECTION" />
     <setting file="file://$PROJECT_DIR$/ItecOverride/app/index.tsx" root0="SKIP_INSPECTION" />
   </component>
   <component name="McpProjectServerCommands">
@@ -77,7 +89,8 @@
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;ImageGeneratorFeature&quot;,
+    &quot;git.auto.fetch.suggestion.counter&quot;: &quot;3&quot;,
     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
@@ -109,7 +122,8 @@
       <workItem from="1774637902564" duration="2943000" />
       <workItem from="1774641184569" duration="1020000" />
       <workItem from="1774642210871" duration="978000" />
-      <workItem from="1774646090066" duration="1105000" />
+      <workItem from="1774646090066" duration="1486000" />
+      <workItem from="1774650734635" duration="5019000" />
     </task>
     <task id="LOCAL-00001" summary="Update dependencies and simplify TypeScript configuration">
       <option name="closed" value="true" />
@@ -135,7 +149,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774643166689</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`.">
+      <option name="closed" value="true" />
+      <created>1774647544444</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1774647544444</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -146,7 +168,19 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="FILTERS">
+                <map>
+                  <entry key="branch">
+                    <value>
+                      <list>
+                        <option value="origin/mod1" />
+                      </list>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </State>
           </value>
         </entry>
       </map>
@@ -156,6 +190,8 @@
     <MESSAGE value="Update dependencies and simplify TypeScript configuration" />
     <MESSAGE value="Add support for camera and SVG-based drawings with new dependencies" />
     <MESSAGE value="Add initial WebSocket server and client integration for real-time drawing synchronization" />
-    <option name="LAST_COMMIT_MESSAGE" value="Add initial WebSocket server and client integration for real-time drawing synchronization" />
+    <MESSAGE value="Split drawing functionality into a new `fight.tsx` screen and refactor `index.tsx` to simplify navigation. Updated `expo-router` and dependencies." />
+    <MESSAGE value="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`." />
+    <option name="LAST_COMMIT_MESSAGE" value="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`." />
   </component>
 </project>
