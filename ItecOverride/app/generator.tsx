@@ -1,5 +1,4 @@
 import * as FileSystem from 'expo-file-system';
-import * as ImagePicker from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -8,7 +7,9 @@ import {
     Alert,
     Image,
     Keyboard,
+    KeyboardAvoidingView,
     Linking,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -18,13 +19,14 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const HF_API_KEY = process.env.EXPO_PUBLIC_HUGGINGFACE_API_KEY ?? "";
-const MODEL_URL = "https://api-inference.huggingface.co/models/prompthero/openjourney-v4";
+const HF_API_KEY = "";
+// Fallback to a highly available, older stable diffusion model to avoid 410 errors on free tier
+const MODEL_URL = "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1";
 
 const blobToDataUrl = (blob: Blob) =>
     new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
-        reader.onerror = () => reject(new Error("Nu am putut procesa imaginea generata."));
+        reader.onerror = () => reject(new Error("Could not process the generated image."));
         reader.onloadend = () => resolve(String(reader.result ?? ""));
         reader.readAsDataURL(blob);
     });
@@ -35,69 +37,33 @@ export default function Generator() {
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [sourceType, setSourceType] = useState<'generated' | 'uploaded' | null>(null);
     const [hasPermissions, setHasPermissions] = useState<boolean | null>(null);
-    const [canAskAgain, setCanAskAgain] = useState(true);
 
-    const refreshPermissions = async () => {
-        const [mediaStatus, pickerStatus] = await Promise.all([
-            MediaLibrary.getPermissionsAsync(),
-            ImagePicker.getMediaLibraryPermissionsAsync(),
-        ]);
+    // Check and request media library permissions
+    const checkAndRequestPermissions = async () => {
+        const status = await MediaLibrary.getPermissionsAsync();
 
-        const granted = mediaStatus.granted && pickerStatus.granted;
-        setHasPermissions(granted);
-        setCanAskAgain(mediaStatus.canAskAgain || pickerStatus.canAskAgain);
-        return granted;
-    };
-
-    const requestPermissions = async () => {
-        const [mediaStatus, pickerStatus] = await Promise.all([
-            MediaLibrary.requestPermissionsAsync(),
-            ImagePicker.requestMediaLibraryPermissionsAsync(),
-        ]);
-
-        const granted = mediaStatus.granted && pickerStatus.granted;
-        setHasPermissions(granted);
-        setCanAskAgain(mediaStatus.canAskAgain || pickerStatus.canAskAgain);
-        return granted;
-    };
-
-    const ensureMediaPermissions = async () => {
-        const alreadyGranted = await refreshPermissions();
-        if (alreadyGranted) return true;
-
-        if (canAskAgain) {
-            const granted = await requestPermissions();
-            if (granted) return true;
+        if (status.granted) {
+            setHasPermissions(true);
+            return;
         }
 
-        Alert.alert(
-            "Permisiuni necesare",
-            "Ai nevoie de acces la galerie pentru upload si salvare. Deschide setarile aplicatiei.",
-            [
-                { text: "Anuleaza", style: "cancel" },
-                { text: "Deschide setari", onPress: openSettings }
-            ]
-        );
-        return false;
+        if (status.canAskAgain) {
+            const requested = await MediaLibrary.requestPermissionsAsync();
+            setHasPermissions(requested.granted);
+        } else {
+            setHasPermissions(false);
+        }
     };
 
     useEffect(() => {
-        void refreshPermissions();
+        void checkAndRequestPermissions();
     }, []);
 
-    // Generate image using HuggingFace API
+    // Generate image using Hugging Face API
     async function generateImage() {
         if (!prompt.trim()) {
-            Alert.alert("Prompt lipsa", "Scrie un prompt inainte de generare.");
-            return;
-        }
-        if (!HF_API_KEY) {
-            Alert.alert(
-                "Lipseste cheia Hugging Face",
-                "Seteaza EXPO_PUBLIC_HUGGINGFACE_API_KEY in mediul de runtime."
-            );
+            Alert.alert("Missing prompt", "Scrie un prompt inainte de generare.");
             return;
         }
 
@@ -117,7 +83,7 @@ export default function Generator() {
                 }),
             });
 
-            // Handle model loading state
+            // Handle model loading state (Cold Start)
             if (response.status === 503) {
                 Alert.alert(
                     "Model is loading",
@@ -126,6 +92,12 @@ export default function Generator() {
                 setLoading(false);
                 return;
             }
+
+            // Handle deprecated or missing model
+            if (response.status === 410) {
+                throw new Error("Model is no longer available (410). Try replacing MODEL_URL with a different Hugging Face model.");
+            }
+
             if (!response.ok) {
                 throw new Error(`HF error ${response.status}`);
             }
@@ -133,44 +105,23 @@ export default function Generator() {
             const result = await response.blob();
             const dataUrl = await blobToDataUrl(result);
             setImageUri(dataUrl);
-            setSourceType('generated');
             setLoading(false);
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            Alert.alert("Error", "Could not generate the image. Check your connection or API key.");
+            Alert.alert("Eroare generare", error.message || "Could not generate the image. Check your connection or API key.");
             setLoading(false);
         }
     }
 
-    // Pick an existing image from the gallery
-    async function pickImage() {
-        const granted = await ensureMediaPermissions();
-        if (!granted) return;
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setImageUri(result.assets[0].uri);
-            setSourceType('uploaded');
-        }
-    }
-
-    // Save the displayed image (AI generated or uploaded) to the gallery
+    // Save the AI generated image to the device gallery
     async function saveToGallery() {
         if (!imageUri) return;
-        const granted = await ensureMediaPermissions();
-        if (!granted) return;
         setSaving(true);
 
         try {
             let fileUriToSave = imageUri;
 
-            // If the image is an AI generated base64 string, write it to a local file first
+            // If the image is a base64 string, write it to a local file first
             if (imageUri.startsWith("data:image")) {
                 const base64Code = imageUri.split("base64,")[1];
                 const dir = (FileSystem as any).documentDirectory;
@@ -185,8 +136,8 @@ export default function Generator() {
             await MediaLibrary.saveToLibraryAsync(fileUriToSave);
 
             Alert.alert(
-                "Saved!",
-                "The sticker is in your gallery. Tap FIGHT and paste it on the poster!",
+                "Salvat!",
+                "Stickerul este in galerie.",
                 [{ text: "OK", onPress: () => router.back() }]
             );
 
@@ -203,7 +154,7 @@ export default function Generator() {
         try {
             await Linking.openSettings();
         } catch {
-            Alert.alert("Info", "Nu am putut deschide setarile automat.");
+            Alert.alert("Info", "Could not open settings automatically.");
         }
     }
 
@@ -222,123 +173,101 @@ export default function Generator() {
     }
 
     // --------------------------------------------------------
-    // RENDER: Permission Denied Screen
+    // RENDER: Blocked UI (No Permissions)
     // --------------------------------------------------------
-    if (false && hasPermissions === false) {
+    if (!hasPermissions) {
         return (
             <SafeAreaView style={styles.screen}>
-                <View style={styles.loadingState}>
-                    <Text style={styles.backText}>[ ◀ BACK ]</Text>
-                </View>
+                <View style={styles.blockedState}>
+                    <View style={styles.permissionBoxFull}>
+                        <Text style={styles.permissionTitle}>Acces Galerie Necesar</Text>
+                        <Text style={styles.permissionText}>
+                            Pentru a folosi generatorul si a salva stickere, trebuie sa permiti accesul la galerie din setarile telefonului.
+                        </Text>
+                        <TouchableOpacity style={styles.settingsBtn} onPress={openSettings}>
+                            <Text style={styles.settingsBtnText}>Deschide Setari</Text>
+                        </TouchableOpacity>
 
-                <View style={styles.permissionBox}>
-                    <Text style={styles.title}>SYSTEM LOCKED</Text>
-                    <Text style={styles.permissionText}>
-                        We need access to your gallery to upload and save stickers.
-                        Please grant permissions in your device settings.
-                    </Text>
-
-                    <TouchableOpacity style={styles.settingsBtn} onPress={openSettings}>
-                        <Text style={styles.settingsBtnText}>[ OPEN SETTINGS ]</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity style={styles.backBtnAlt} onPress={() => router.back()}>
+                            <Text style={styles.backTextAlt}>Inapoi</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </SafeAreaView>
         );
     }
 
     // --------------------------------------------------------
-    // RENDER: Main App Screen
+    // RENDER: Main App Screen (Permissions Granted)
     // --------------------------------------------------------
     return (
-        <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-            <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-            {false && (
-                <Text style={styles.backText}>[ ◀ BACK ]</Text>
-            )}
-
-                <View style={styles.topRow}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-                        <Text style={styles.backText}>Back</Text>
-                    </TouchableOpacity>
-                    <View style={styles.statusPill}>
-                        <Text style={styles.statusPillText}>
-                            {hasPermissions ? 'Galerie: activa' : 'Galerie: blocata'}
-                        </Text>
+        <SafeAreaView style={styles.screen} edges={['top']}>
+            {/* KeyboardAvoidingView prevents the keyboard from covering the text input */}
+            <KeyboardAvoidingView
+                style={styles.keyboardAvoid}
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+            >
+                <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+                    <View style={styles.topRow}>
+                        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                            <Text style={styles.backText}>Back</Text>
+                        </TouchableOpacity>
+                        <View style={styles.statusPill}>
+                            <Text style={styles.statusPillText}>Galerie: Activa</Text>
+                        </View>
                     </View>
-                </View>
 
-                <View style={styles.headerCard}>
-                    <Text style={styles.title}>Sticker Generator</Text>
-                    <Text style={styles.subtitle}>Genereaza cu Hugging Face, previzualizeaza si salveaza direct pe telefon.</Text>
-                </View>
+                    <View style={styles.headerCard}>
+                        <Text style={styles.title}>Sticker Generator</Text>
+                        <Text style={styles.subtitle}>Genereaza cu Hugging Face, previzualizeaza si salveaza direct pe telefon.</Text>
+                    </View>
 
-                {!hasPermissions && (
-                    <View style={styles.permissionBox}>
-                        <Text style={styles.permissionTitle}>Permisiunea de galerie nu este activa.</Text>
-                        <Text style={styles.permissionText}>
-                            Upload si salvare necesita acces la galerie. Poti continua sa generezi, apoi activezi accesul din setari.
-                        </Text>
-                        <TouchableOpacity style={styles.settingsBtn} onPress={openSettings}>
-                            <Text style={styles.settingsBtnText}>Deschide setari</Text>
+                    <View style={styles.previewBox}>
+                        {loading ? (
+                            <View style={styles.loadingWrapper}>
+                                <ActivityIndicator size="large" color="#38bdf8" />
+                                <Text style={styles.loadingText}>Generam imaginea...</Text>
+                            </View>
+                        ) : imageUri ? (
+                            <Image source={{ uri: imageUri }} style={styles.img} />
+                        ) : (
+                            <View style={styles.placeholderContainer}>
+                                <Text style={styles.info}>Niciun sticker generat inca</Text>
+                                <Text style={styles.subInfo}>Scrie un prompt mai jos pentru a crea unul.</Text>
+                            </View>
+                        )}
+                    </View>
+
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Ex: bold street art fox sticker, blue neon outline"
+                            placeholderTextColor="#64748b"
+                            value={prompt}
+                            onChangeText={setPrompt}
+                            multiline
+                        />
+                    </View>
+
+                    <View style={styles.actionRow}>
+                        <TouchableOpacity
+                            style={[styles.actionBtn, styles.genBtn, loading && styles.disabledBtn]}
+                            onPress={generateImage}
+                            disabled={loading}
+                        >
+                            <Text style={styles.genText}>{loading ? "Generare..." : "Genereaza AI"}</Text>
                         </TouchableOpacity>
                     </View>
-                )}
 
-            <View style={styles.previewBox}>
-                {loading ? (
-                    <View style={styles.loadingWrapper}>
-                        <ActivityIndicator size="large" color="#38bdf8" />
-                        <Text style={styles.loadingText}>Generam imaginea...</Text>
-                    </View>
-                ) : imageUri ? (
-                    <Image source={{ uri: imageUri }} style={styles.img} />
-                ) : (
-                    <View style={styles.placeholderContainer}>
-                        <Text style={styles.info}>Nu exista inca un sticker generat</Text>
-                        <Text style={styles.subInfo}>Scrie un prompt sau incarca o imagine din galerie.</Text>
-                    </View>
-                )}
-            </View>
-
-                <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>
-                        Sursa: {sourceType === 'generated' ? 'Hugging Face' : sourceType === 'uploaded' ? 'Galerie' : 'N/A'}
-                    </Text>
-                </View>
-
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Ex: bold street art fox sticker, blue neon outline"
-                    placeholderTextColor="#64748b"
-                    value={prompt}
-                    onChangeText={setPrompt}
-                    multiline
-                />
-            </View>
-
-            <View style={styles.actionRow}>
-                <TouchableOpacity
-                    style={[styles.actionBtn, styles.genBtn, loading && styles.disabledBtn]}
-                    onPress={generateImage}
-                    disabled={loading}
-                >
-                    <Text style={styles.genText}>{loading ? "Generare..." : "Genereaza AI"}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={[styles.actionBtn, styles.pickBtn]} onPress={pickImage}>
-                    <Text style={styles.pickText}>Upload</Text>
-                </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-                style={[styles.saveBtn, (!imageUri || saving) && styles.disabledBtn]}
-                onPress={saveToGallery}
-                disabled={!imageUri || saving}
-            >
-                <Text style={styles.saveTextPrimary}>{saving ? 'Se salveaza...' : 'Salveaza in galerie'}</Text>
-                </TouchableOpacity>
-            </ScrollView>
+                    <TouchableOpacity
+                        style={[styles.saveBtn, (!imageUri || saving) && styles.disabledBtn]}
+                        onPress={saveToGallery}
+                        disabled={!imageUri || saving}
+                    >
+                        <Text style={styles.saveTextPrimary}>{saving ? 'Se salveaza...' : 'Salveaza in galerie'}</Text>
+                    </TouchableOpacity>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
@@ -346,6 +275,9 @@ export default function Generator() {
 const styles = StyleSheet.create({
     screen: {
         backgroundColor: '#020617',
+        flex: 1,
+    },
+    keyboardAvoid: {
         flex: 1,
     },
     container: {
@@ -362,6 +294,57 @@ const styles = StyleSheet.create({
         color: '#cbd5e1',
         fontSize: 14,
         marginTop: 12,
+    },
+    blockedState: {
+        alignItems: 'center',
+        flex: 1,
+        justifyContent: 'center',
+        padding: 20,
+    },
+    permissionBoxFull: {
+        backgroundColor: 'rgba(15, 23, 42, 0.88)',
+        borderColor: 'rgba(248, 113, 113, 0.35)',
+        borderRadius: 18,
+        borderWidth: 1,
+        padding: 24,
+        width: '100%',
+        alignItems: 'center',
+    },
+    permissionTitle: {
+        color: '#fecaca',
+        fontSize: 18,
+        fontWeight: '700',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    permissionText: {
+        color: '#cbd5e1',
+        fontSize: 14,
+        lineHeight: 22,
+        marginBottom: 24,
+        textAlign: 'center',
+    },
+    settingsBtn: {
+        backgroundColor: '#2563eb',
+        borderRadius: 12,
+        paddingHorizontal: 24,
+        paddingVertical: 14,
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    settingsBtnText: {
+        color: '#fff',
+        fontSize: 15,
+        fontWeight: '700',
+    },
+    backBtnAlt: {
+        paddingVertical: 10,
+    },
+    backTextAlt: {
+        color: '#94a3b8',
+        fontSize: 14,
+        fontWeight: '600',
     },
     topRow: {
         alignItems: 'center',
@@ -415,38 +398,6 @@ const styles = StyleSheet.create({
         fontSize: 14,
         lineHeight: 20,
     },
-    permissionBox: {
-        backgroundColor: 'rgba(15, 23, 42, 0.88)',
-        borderColor: 'rgba(248, 113, 113, 0.35)',
-        borderRadius: 18,
-        borderWidth: 1,
-        marginBottom: 14,
-        padding: 14,
-    },
-    permissionTitle: {
-        color: '#fecaca',
-        fontSize: 14,
-        fontWeight: '700',
-        marginBottom: 8,
-    },
-    permissionText: {
-        color: '#cbd5e1',
-        fontSize: 13,
-        lineHeight: 19,
-        marginBottom: 12,
-    },
-    settingsBtn: {
-        alignSelf: 'flex-start',
-        backgroundColor: '#991b1b',
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-    },
-    settingsBtnText: {
-        color: '#fff',
-        fontSize: 13,
-        fontWeight: '700',
-    },
     previewBox: {
         alignItems: 'center',
         backgroundColor: '#0f172a',
@@ -455,7 +406,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         height: 360,
         justifyContent: 'center',
-        marginBottom: 10,
+        marginBottom: 16,
         overflow: 'hidden',
     },
     img: {
@@ -487,14 +438,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         marginTop: 12,
     },
-    metaRow: {
-        marginBottom: 12,
-    },
-    metaText: {
-        color: '#94a3b8',
-        fontSize: 12,
-        fontWeight: '600',
-    },
     inputContainer: {
         marginBottom: 12,
     },
@@ -511,7 +454,6 @@ const styles = StyleSheet.create({
     },
     actionRow: {
         flexDirection: 'row',
-        gap: 10,
         marginBottom: 12,
     },
     actionBtn: {
@@ -522,21 +464,10 @@ const styles = StyleSheet.create({
     },
     genBtn: {
         backgroundColor: '#2563eb',
-        flex: 0.65,
-    },
-    pickBtn: {
-        backgroundColor: '#0f172a',
-        borderColor: '#38bdf8',
-        borderWidth: 1,
-        flex: 0.35,
+        flex: 1,
     },
     genText: {
         color: '#fff',
-        fontSize: 15,
-        fontWeight: '700',
-    },
-    pickText: {
-        color: '#e0f2fe',
         fontSize: 15,
         fontWeight: '700',
     },
