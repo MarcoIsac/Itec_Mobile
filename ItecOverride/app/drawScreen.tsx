@@ -1,13 +1,3 @@
-import {
-    ViroARImageMarker,
-    ViroARScene,
-    ViroARSceneNavigator,
-    ViroImage,
-    ViroMaterials,
-    ViroPolyline,
-    ViroText
-} from '@reactvision/react-viro';
-import Constants from 'expo-constants';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -31,11 +21,6 @@ import Svg, { Path } from 'react-native-svg';
 import { getDeviceId, getServerUrl, loadPosterContent, savePosterContent } from './lib/ar-store';
 import type { NormalizedPoint, PosterContent, PosterId, StickerRecord, StrokeRecord } from './lib/ar-types';
 import { isPosterId, POSTER_MAP } from './lib/posters';
-import { ensureViroTargets } from './lib/viro-init';
-
-ensureViroTargets();
-
-const isExpoGo = Constants.executionEnvironment === 'storeClient';
 
 type DraftSticker = {
     base64: string;
@@ -60,26 +45,6 @@ const createEmptyContent = (posterId: PosterId): PosterContent => ({
 
 const createId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const COLOR_MATERIALS = {
-    '#38bdf8': 'strokeSky',
-    '#ef4444': 'strokeRed',
-    '#22c55e': 'strokeGreen',
-    '#f59e0b': 'strokeAmber',
-    '#f8fafc': 'strokeWhite',
-    '#0f172a': 'strokeInk',
-} as const;
-
-ViroMaterials.createMaterials({
-    strokeAmber: { diffuseColor: '#f59e0b' },
-    strokeGreen: { diffuseColor: '#22c55e' },
-    strokeInk: { diffuseColor: '#0f172a' },
-    strokeRed: { diffuseColor: '#ef4444' },
-    strokeSky: { diffuseColor: '#38bdf8' },
-    strokeWhite: { diffuseColor: '#f8fafc' },
-});
-
-const getStrokeMaterial = (color: string) => COLOR_MATERIALS[color as keyof typeof COLOR_MATERIALS] ?? 'strokeSky';
-
 const toCanvasPoint = (point: NormalizedPoint, width: number, height: number) => ({
     x: point.x * width,
     y: point.y * height,
@@ -94,69 +59,6 @@ const buildSvgPath = (points: NormalizedPoint[], width: number, height: number) 
             return `${index === 0 ? 'M' : 'L'}${canvasPoint.x},${canvasPoint.y}`;
         })
         .join(' ');
-};
-
-const buildArPolylinePoints = (points: NormalizedPoint[], posterWidth: number, posterHeight: number): [number, number, number][] =>
-    points.map((point) => [point.x * posterWidth - posterWidth / 2, posterHeight / 2 - point.y * posterHeight, 0]);
-
-const buildArStickerPosition = (point: NormalizedPoint, posterWidth: number, posterHeight: number): [number, number, number] => [
-    point.x * posterWidth - posterWidth / 2,
-    posterHeight / 2 - point.y * posterHeight,
-    0.01
-];
-
-const DrawScene = (props: any) => {
-    const { content, draftSticker, draftStrokes, onAnchorStateChange, posterId } = props.arSceneNavigator.viroAppProps as {
-        content: PosterContent;
-        draftSticker: DraftSticker | null;
-        draftStrokes: StrokeRecord[];
-        onAnchorStateChange: (visible: boolean) => void;
-        posterId: PosterId;
-    };
-
-    const poster = POSTER_MAP[posterId];
-    const posterHeight = poster.physicalWidth * poster.aspectRatio;
-    const combinedStrokes = [...content.strokes, ...draftStrokes];
-    const combinedStickers = [...content.stickers, ...(draftSticker ? [draftSticker] : [])];
-
-    return (
-        <ViroARScene>
-            <ViroARImageMarker
-                target={posterId}
-                onAnchorFound={() => onAnchorStateChange(true)}
-                onAnchorRemoved={() => onAnchorStateChange(false)}
-            >
-                <ViroText
-                    text={poster.label}
-                    position={[0, posterHeight / 2 + 0.08, 0]}
-                    scale={[0.08, 0.08, 0.08]}
-                    style={{ color: '#f8fafc', fontFamily: 'Arial', fontSize: 18, textAlign: 'center', textAlignVertical: 'center' }}
-                />
-
-                {combinedStrokes.map((stroke) => (
-                    <ViroPolyline
-                        key={stroke.id}
-                        materials={[getStrokeMaterial(stroke.color)]}
-                        points={buildArPolylinePoints(stroke.points, poster.physicalWidth, posterHeight)}
-                        position={[0, 0, 0.004]}
-                        thickness={stroke.size * 0.0009}
-                    />
-                ))}
-
-                {combinedStickers.filter((sticker) => sticker.imageUri || sticker.uri).map((sticker) => (
-                    <ViroImage
-                        key={sticker.id}
-                        position={buildArStickerPosition(sticker.position, poster.physicalWidth, posterHeight)}
-                        source={{ uri: (sticker.imageUri ?? sticker.uri) as string }}
-                        style={{
-                            width: sticker.width * sticker.scale * poster.physicalWidth,
-                            height: sticker.height * sticker.scale * posterHeight,
-                        }}
-                    />
-                ))}
-            </ViroARImageMarker>
-        </ViroARScene>
-    );
 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -354,12 +256,11 @@ export default function DrawScreen() {
     const { posterId: rawPosterId } = useLocalSearchParams<{ posterId?: string }>();
     const posterId = isPosterId(rawPosterId) ? rawPosterId : null;
     const poster = posterId ? POSTER_MAP[posterId] : null;
-    const { width: screenWidth } = useWindowDimensions();
+    const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
-    const canvasWidth = Math.min(screenWidth - 32, 360);
-    const canvasHeight = poster ? canvasWidth * poster.aspectRatio : canvasWidth * 1.414;
+    const canvasWidth = screenWidth;
+    const canvasHeight = screenHeight;
 
-    const [anchorVisible, setAnchorVisible] = useState(false);
     const [authorId, setAuthorId] = useState('');
     const [content, setContent] = useState<PosterContent | null>(posterId ? createEmptyContent(posterId) : null);
     const [draftStrokes, setDraftStrokes] = useState<StrokeRecord[]>([]);
@@ -421,6 +322,10 @@ export default function DrawScreen() {
 
     const normalizeTouchPoint = (x: number, y: number): NormalizedPoint => {
         const { width, height } = canvasLayoutRef.current;
+        if (width <= 0 || height <= 0) {
+            return { x: 0.5, y: 0.5 };
+        }
+
         return {
             x: clamp(x / width, 0, 1),
             y: clamp(y / height, 0, 1),
@@ -428,7 +333,9 @@ export default function DrawScreen() {
     };
 
     const drawingPanResponder = useMemo(() => PanResponder.create({
+        onMoveShouldSetPanResponderCapture: () => tool === 'draw',
         onMoveShouldSetPanResponder: () => tool === 'draw',
+        onStartShouldSetPanResponderCapture: () => tool === 'draw',
         onStartShouldSetPanResponder: () => tool === 'draw',
         onPanResponderGrant: (event) => {
             if (tool !== 'draw') return;
@@ -460,7 +367,9 @@ export default function DrawScreen() {
     }), [authorId, brushSize, selectedColor, tool]);
 
     const stickerPanResponder = useMemo(() => PanResponder.create({
+        onMoveShouldSetPanResponderCapture: () => tool === 'sticker' && !!draftSticker,
         onMoveShouldSetPanResponder: () => tool === 'sticker' && !!draftSticker,
+        onStartShouldSetPanResponderCapture: () => tool === 'sticker' && !!draftSticker,
         onStartShouldSetPanResponder: () => tool === 'sticker' && !!draftSticker,
         onPanResponderGrant: () => {
             stickerStartRef.current = draftSticker?.position ?? null;
@@ -512,6 +421,16 @@ export default function DrawScreen() {
             width: clamp(0.2 * ratio, 0.12, 0.45),
         });
         setTool('sticker');
+    };
+
+    const nudgeDraftSticker = (deltaX: number, deltaY: number) => {
+        setDraftSticker((previous) => previous ? {
+            ...previous,
+            position: {
+                x: clamp(previous.position.x + deltaX, 0.08, 0.92),
+                y: clamp(previous.position.y + deltaY, 0.08, 0.92),
+            },
+        } : null);
     };
 
     const submitChanges = async () => {
@@ -576,34 +495,75 @@ export default function DrawScreen() {
     return (
         <SafeAreaView style={drawStyles.screen} edges={['top', 'bottom']}>
             <View style={drawStyles.sceneWrapper}>
-                {isExpoGo ? (
-                    <CameraView facing="back" style={StyleSheet.absoluteFill} />
-                ) : (
-                    <ViroARSceneNavigator
-                        autofocus
-                        initialScene={{ scene: DrawScene as any }}
-                        style={StyleSheet.absoluteFill}
-                        viroAppProps={{
-                            content,
-                            draftSticker,
-                            draftStrokes: currentStroke.length ? [
-                                ...draftStrokes,
-                                {
-                                    authorId,
-                                    color: selectedColor,
-                                    createdAt: new Date().toISOString(),
-                                    id: 'preview-stroke',
-                                    points: currentStroke,
-                                    size: brushSize,
-                                }
-                            ] : draftStrokes,
-                            onAnchorStateChange: setAnchorVisible,
-                            posterId,
-                        }}
-                    />
-                )}
+                <CameraView facing="back" style={StyleSheet.absoluteFill} />
 
                 <View style={drawStyles.sceneShade} pointerEvents="none" />
+
+                <View
+                    style={drawStyles.canvasStage}
+                    onLayout={(event) => {
+                        const layout = event.nativeEvent.layout;
+                        canvasLayoutRef.current = {
+                            x: layout.x,
+                            y: layout.y,
+                            width: layout.width,
+                            height: layout.height,
+                        };
+                    }}
+                >
+                    <Image source={poster.source} style={drawStyles.posterPreviewImage} resizeMode="cover" />
+
+                    <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+                        {combinedStrokes.map((stroke) => (
+                            <Path
+                                key={stroke.id}
+                                d={buildSvgPath(stroke.points, canvasWidth, canvasHeight)}
+                                stroke={stroke.color}
+                                strokeWidth={stroke.size}
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        ))}
+                        {currentStroke.length > 1 && (
+                            <Path
+                                d={buildSvgPath(currentStroke, canvasWidth, canvasHeight)}
+                                stroke={selectedColor}
+                                strokeWidth={brushSize}
+                                fill="none"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            />
+                        )}
+                    </Svg>
+
+                    {combinedStickers.map((sticker) => {
+                        const stickerWidth = sticker.width * sticker.scale * canvasWidth;
+                        const stickerHeight = sticker.height * sticker.scale * canvasHeight;
+                        const left = sticker.position.x * canvasWidth - stickerWidth / 2;
+                        const top = sticker.position.y * canvasHeight - stickerHeight / 2;
+
+                        return (
+                            <Image
+                                key={sticker.id}
+                                source={{ uri: sticker.imageUri ?? sticker.uri }}
+                                style={[drawStyles.stickerPreview, { height: stickerHeight, left, top, width: stickerWidth }]}
+                                resizeMode="contain"
+                            />
+                        );
+                    })}
+
+                    <View
+                        style={StyleSheet.absoluteFill}
+                        {...drawingPanResponder.panHandlers}
+                        pointerEvents={tool === 'draw' ? 'auto' : 'none'}
+                    />
+                    <View
+                        style={StyleSheet.absoluteFill}
+                        {...stickerPanResponder.panHandlers}
+                        pointerEvents={tool === 'sticker' && draftSticker ? 'auto' : 'none'}
+                    />
+                </View>
 
                 <SafeAreaView style={StyleSheet.absoluteFill} pointerEvents="box-none">
                     <View style={drawStyles.topControls}>
@@ -613,11 +573,7 @@ export default function DrawScreen() {
                         <View style={drawStyles.statusBox}>
                             <Text style={drawStyles.statusHeadline}>{poster.label}</Text>
                             <Text style={drawStyles.statusSubline}>
-                                {isExpoGo
-                                    ? 'Preview fara ancorare AR. Build-ul nativ activeaza marker tracking.'
-                                    : anchorVisible
-                                        ? 'Poster urmarit acum'
-                                        : 'Cauta posterul in camera pentru a vedea continutul in AR'}
+                                Preview 2D full-screen pentru desen si stickere.
                             </Text>
                         </View>
                     </View>
@@ -647,72 +603,6 @@ export default function DrawScreen() {
                                 >
                                     <Text style={drawStyles.modeChipText}>Anuleaza draft</Text>
                                 </TouchableOpacity>
-                            </View>
-
-                            <View
-                                style={[drawStyles.canvasCard, { width: canvasWidth, height: canvasHeight }]}
-                                onLayout={(event) => {
-                                    const layout = event.nativeEvent.layout;
-                                    canvasLayoutRef.current = {
-                                        x: layout.x,
-                                        y: layout.y,
-                                        width: layout.width,
-                                        height: layout.height,
-                                    };
-                                }}
-                            >
-                                <View
-                                    style={StyleSheet.absoluteFill}
-                                    {...drawingPanResponder.panHandlers}
-                                    pointerEvents={tool === 'draw' ? 'auto' : 'none'}
-                                />
-                                <View
-                                    style={StyleSheet.absoluteFill}
-                                    {...stickerPanResponder.panHandlers}
-                                    pointerEvents={tool === 'sticker' && draftSticker ? 'auto' : 'none'}
-                                />
-
-                                <Image source={poster.source} style={drawStyles.posterPreviewImage} resizeMode="cover" />
-
-                                <Svg style={StyleSheet.absoluteFill}>
-                                    {combinedStrokes.map((stroke) => (
-                                        <Path
-                                            key={stroke.id}
-                                            d={buildSvgPath(stroke.points, canvasWidth, canvasHeight)}
-                                            stroke={stroke.color}
-                                            strokeWidth={stroke.size}
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                    ))}
-                                    {currentStroke.length > 1 && (
-                                        <Path
-                                            d={buildSvgPath(currentStroke, canvasWidth, canvasHeight)}
-                                            stroke={selectedColor}
-                                            strokeWidth={brushSize}
-                                            fill="none"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        />
-                                    )}
-                                </Svg>
-
-                                {combinedStickers.map((sticker) => {
-                                    const stickerWidth = sticker.width * sticker.scale * canvasWidth;
-                                    const stickerHeight = sticker.height * sticker.scale * canvasHeight;
-                                    const left = sticker.position.x * canvasWidth - stickerWidth / 2;
-                                    const top = sticker.position.y * canvasHeight - stickerHeight / 2;
-
-                                    return (
-                                        <Image
-                                            key={sticker.id}
-                                            source={{ uri: sticker.imageUri ?? sticker.uri }}
-                                            style={[drawStyles.stickerPreview, { height: stickerHeight, left, top, width: stickerWidth }]}
-                                            resizeMode="contain"
-                                        />
-                                    );
-                                })}
                             </View>
 
                             {tool === 'draw' && (
@@ -774,8 +664,45 @@ export default function DrawScreen() {
                                             <Text style={drawStyles.scaleButtonText}>Mai mare</Text>
                                         </TouchableOpacity>
                                     </View>
+                                    <Text style={drawStyles.sectionLabel}>Mutare sticker (X / Y)</Text>
+                                    <View style={drawStyles.stickerMovePad}>
+                                        <View style={drawStyles.stickerMoveRow}>
+                                            <View style={drawStyles.stickerMoveSpacer} />
+                                            <TouchableOpacity
+                                                onPress={() => nudgeDraftSticker(0, -0.03)}
+                                                style={drawStyles.moveButton}
+                                                disabled={!draftSticker}
+                                            >
+                                                <Text style={drawStyles.moveButtonText}>↑</Text>
+                                            </TouchableOpacity>
+                                            <View style={drawStyles.stickerMoveSpacer} />
+                                        </View>
+                                        <View style={drawStyles.stickerMoveRow}>
+                                            <TouchableOpacity
+                                                onPress={() => nudgeDraftSticker(-0.03, 0)}
+                                                style={drawStyles.moveButton}
+                                                disabled={!draftSticker}
+                                            >
+                                                <Text style={drawStyles.moveButtonText}>←</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => nudgeDraftSticker(0, 0.03)}
+                                                style={drawStyles.moveButton}
+                                                disabled={!draftSticker}
+                                            >
+                                                <Text style={drawStyles.moveButtonText}>↓</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity
+                                                onPress={() => nudgeDraftSticker(0.03, 0)}
+                                                style={drawStyles.moveButton}
+                                                disabled={!draftSticker}
+                                            >
+                                                <Text style={drawStyles.moveButtonText}>→</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
                                     <Text style={drawStyles.stickerHint}>
-                                        Trage sticker-ul in preview-ul posterului, apoi apasa submit ca sa ramana ancorat in AR.
+                                        Poti trage sticker-ul direct pe ecran sau il poti ajusta fin din sageti.
                                     </Text>
                                 </>
                             )}
@@ -807,7 +734,7 @@ const drawStyles = StyleSheet.create({
         borderTopLeftRadius: 28,
         borderTopRightRadius: 28,
         marginTop: 'auto',
-        maxHeight: '58%',
+        maxHeight: '44%',
         overflow: 'hidden',
     },
     bottomSheetContent: {
@@ -832,6 +759,9 @@ const drawStyles = StyleSheet.create({
     brushRow: {
         flexDirection: 'row',
         gap: 12,
+    },
+    canvasStage: {
+        ...StyleSheet.absoluteFillObject,
     },
     canvasCard: {
         backgroundColor: '#0f172a',
@@ -918,7 +848,7 @@ const drawStyles = StyleSheet.create({
     },
     posterPreviewImage: {
         height: '100%',
-        opacity: 0.34,
+        opacity: 0.68,
         width: '100%',
     },
     primaryAction: {
@@ -952,9 +882,26 @@ const drawStyles = StyleSheet.create({
         minWidth: 110,
         textAlign: 'center',
     },
+    moveButton: {
+        alignItems: 'center',
+        backgroundColor: '#0f172a',
+        borderColor: '#334155',
+        borderRadius: 16,
+        borderWidth: 1,
+        height: 46,
+        justifyContent: 'center',
+        minWidth: 62,
+        paddingHorizontal: 8,
+    },
+    moveButtonText: {
+        color: '#e2e8f0',
+        fontSize: 24,
+        fontWeight: '700',
+        lineHeight: 28,
+    },
     sceneShade: {
         ...StyleSheet.absoluteFillObject,
-        backgroundColor: 'rgba(2, 6, 23, 0.16)',
+        backgroundColor: 'rgba(2, 6, 23, 0.08)',
     },
     sceneWrapper: {
         backgroundColor: '#000',
@@ -998,6 +945,19 @@ const drawStyles = StyleSheet.create({
         fontSize: 13,
         lineHeight: 20,
         textAlign: 'center',
+    },
+    stickerMovePad: {
+        alignItems: 'center',
+        gap: 8,
+        width: '100%',
+    },
+    stickerMoveRow: {
+        flexDirection: 'row',
+        gap: 10,
+        justifyContent: 'center',
+    },
+    stickerMoveSpacer: {
+        minWidth: 62,
     },
     stickerPreview: {
         position: 'absolute',
