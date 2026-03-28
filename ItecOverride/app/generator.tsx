@@ -337,7 +337,6 @@ export default function Generator() {
                 disabled={!imageUri || saving}
             >
                 <Text style={styles.saveTextPrimary}>{saving ? 'Se salveaza...' : 'Salveaza in galerie'}</Text>
-                    <Text style={styles.saveText}>[ ⬇ SAVE TO GALLERY ]</Text>
                 </TouchableOpacity>
             </ScrollView>
         </SafeAreaView>
@@ -552,11 +551,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 15,
         fontWeight: '700',
-    },
-    saveText: {
-        color: 'transparent',
-        fontSize: 0,
-        height: 0,
     },
     disabledBtn: {
         opacity: 0.55,
