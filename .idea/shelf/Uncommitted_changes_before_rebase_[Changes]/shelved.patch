@@ -1,0 +1,756 @@
+Index: ItecOverride/app/fight.tsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState, useEffect, useRef } from 'react';\nimport { StyleSheet, Text, View, Button, Dimensions, Alert } from 'react-native';\nimport { CameraView, useCameraPermissions } from 'expo-camera';\nimport Svg, { Path } from 'react-native-svg';\nimport { useRouter } from 'expo-router';\n\n// Importăm clientul de socket\nimport { io } from \"socket.io-client\";\n\n// ==========================================\n// CONFIGURARE CRITICĂ: PUNE IP-UL TĂU AICI!\n// Nu folosi 'localhost', telefoanele nu îl văd.\n// ==========================================\nconst LAPTOP_IP = \"LAPTOP_IP\"; // Ex: \"192.168.1.15\"\nconst SERVER_URL = `http://${LAPTOP_IP}:3000`;\n\n\ntype Point = { x: number; y: number };\ntype Line = { points: Point[]; color: string; id: string }; // Adăugăm ID unic\n\nconst { width, height } = Dimensions.get('window');\n\nexport default function FightScreen() {\n    const [permission, requestPermission] = useCameraPermissions();\n    const [lines, setLines] = useState<Line[]>([]);\n    const [currentLine, setCurrentLine] = useState<Point[]>([]);\n    const [strokeColor, setStrokeColor] = useState(\"#39ff14\"); // Verde neon\n    const [connected, setConnected] = useState(false);\n    const router = useRouter();\n\n    // Folosim useRef pentru socket ca să nu se re-creeze la fiecare randare\n    const socketRef = useRef<any>(null);\n\n    // 1. Efectul pentru gestionarea conexiunii WebSocket\n    useEffect(() => {\n        console.log(`Încercăm conectarea la server: ${SERVER_URL}`);\n\n        // Creăm conexiunea\n        socketRef.current = io(SERVER_URL, {\n            transports: ['websocket'], // Forțăm WebSocket pentru viteză\n        });\n\n        // Ascultăm evenimentele\n        socketRef.current.on('connect', () => {\n            console.log('Conectat la serverul iTEC!');\n            setConnected(true);\n        });\n\n        socketRef.current.on('connect_error', (err: any) => {\n            console.log('Eroare conexiune server:', err.message);\n            setConnected(false);\n        });\n\n        // Când ne conectăm prima dată, primim istoricul\n        socketRef.current.on('initHistory', (history: Line[]) => {\n            console.log(`Am primit ${history.length} linii de istoric.`);\n            setLines(history);\n        });\n\n        // Când cineva trimite o linie nouă în timp real\n        socketRef.current.on('newLine', (newLine: Line) => {\n            console.log('Am primit o linie nouă prin broadcast!');\n            setLines((prev) => [...prev, newLine]);\n        });\n\n        // Când cineva șterge tot\n        socketRef.current.on('clearCanvas', () => {\n            setLines([]);\n        });\n\n        // Curățarea conexiunii când închidem aplicația\n        return () => {\n            if (socketRef.current) socketRef.current.disconnect();\n        };\n    }, []);\n\n    // 2. Verificăm permisiunile pentru cameră\n    if (!permission || !permission.granted) {\n        return (\n            <View style={styles.container}>\n                <Text style={{color: 'white', textAlign: 'center', marginBottom: 20}}>Avem nevoie de cameră.</Text>\n                <Button onPress={requestPermission} title=\"Permite camera\" />\n            </View>\n        );\n    }\n\n    // 3. Funcții pentru a capta desenul cu degetul\n    const handleTouchStart = (event: any) => {\n        const { locationX, locationY } = event.nativeEvent;\n        setCurrentLine([{ x: locationX, y: locationY }]);\n    };\n\n    const handleTouchMove = (event: any) => {\n        const { locationX, locationY } = event.nativeEvent;\n        setCurrentLine((prev) => [...prev, { x: locationX, y: locationY }]);\n    };\n\n    const handleTouchEnd = () => {\n        if (currentLine.length > 1) { // Minim 2 puncte pentru o linie\n            const newLine: Line = {\n                points: currentLine,\n                color: strokeColor,\n                id: `${socketRef.current?.id}_${Date.now()}` // ID unic bazat pe socket și timp\n            };\n\n            // Adăugăm local\n            setLines((prev) => [...prev, newLine]);\n\n            // TRMITEM LINIA LA SERVER ÎN TIMP REAL!\n            if (socketRef.current && connected) {\n                socketRef.current.emit('sendLine', newLine);\n                console.log('Linie trimisă la server.');\n            }\n\n            setCurrentLine([]); // Resetăm linia curentă\n        }\n    };\n\n    // Funcția pentru ștergere sincronizată\n    const requestClearAll = () => {\n        if (socketRef.current && connected) {\n            socketRef.current.emit('requestClear');\n        }\n    };\n\n    // Transformăm array-ul de puncte într-un format înțeles de SVG\n    const createSvgPath = (points: Point[]) => {\n        if (points.length === 0) return '';\n        const path = points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x} ${p.y}`);\n        return path.join(' ');\n    };\n\n    return (\n        <View style={styles.container}>\n            {/* Stratul 1: Camera care vede lumea reală */}\n            <CameraView style={StyleSheet.absoluteFill} facing=\"back\" />\n\n            {/* Stratul 2: Canvas-ul invizibil pe care desenăm */}\n            <View\n                style={StyleSheet.absoluteFill}\n                onTouchStart={handleTouchStart}\n                onTouchMove={handleTouchMove}\n                onTouchEnd={handleTouchEnd}\n            >\n                <Svg width={width} height={height}>\n                    {/* Desenăm liniile deja finalizate (locale + primite) */}\n                    {lines.map((line) => (\n                        <Path\n                            key={line.id}\n                            d={createSvgPath(line.points)}\n                            stroke={line.color}\n                            strokeWidth={8}\n                            strokeLinecap=\"round\"\n                            strokeLinejoin=\"round\"\n                            fill=\"none\"\n                        />\n                    ))}\n\n                    {/* Desenăm linia care este în curs de creare locală (live) */}\n                    {currentLine.length > 0 && (\n                        <Path\n                            d={createSvgPath(currentLine)}\n                            stroke={strokeColor}\n                            strokeWidth={8}\n                            strokeLinecap=\"round\"\n                            strokeLinejoin=\"round\"\n                            fill=\"none\"\n                        />\n                    )}\n                </Svg>\n            </View>\n\n            {/* UI pentru debugging și culori */}\n            <View style={styles.uiContainer}>\n                <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>\n                    {/* Indicator de conexiune */}\n                    <View style={[styles.statusDot, {backgroundColor: connected ? '#39ff14' : 'red'}]} />\n                    <Text style={styles.title}>SYNC MODE</Text>\n                </View>\n\n                <View style={styles.palette}>\n                    {['#39ff14', '#ff003c', '#00f0ff', '#ffffff'].map((color) => (\n                        <View\n                            key={color}\n                            onTouchStart={() => setStrokeColor(color)}\n                            style={[\n                                styles.colorCircle,\n                                { backgroundColor: color, borderWidth: strokeColor === color ? 3 : 0 }\n                            ]}\n                        />\n                    ))}\n                </View>\n                <Button title=\"Ieși\" onPress={() => router.back()} color=\"#ff003c\" />\n                <Button title=\"Șterge Tot\" onPress={requestClearAll} color=\"#444\" />\n            </View>\n        </View>\n    );\n}\n\nconst styles = StyleSheet.create({\n    container: {\n        flex: 1,\n        backgroundColor: '#000',\n    },\n    uiContainer: {\n        position: 'absolute',\n        bottom: 30,\n        left: 10,\n        right: 10,\n        backgroundColor: 'rgba(0,0,0,0.7)',\n        padding: 15,\n        borderRadius: 15,\n        gap: 10,\n    },\n    palette: {\n        flexDirection: 'row',\n        justifyContent: 'center',\n        gap: 10,\n        marginVertical: 5,\n    },\n    colorCircle: {\n        width: 35,\n        height: 35,\n        borderRadius: 18,\n        borderColor: '#fff',\n    },\n    title: {\n        color: 'white',\n        fontWeight: 'bold',\n        fontSize: 14,\n    },\n    statusDot: {\n        width: 10,\n        height: 10,\n        borderRadius: 5,\n    }\n});
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/ItecOverride/app/fight.tsx b/ItecOverride/app/fight.tsx
+--- a/ItecOverride/app/fight.tsx	(revision 66cc43753ca9388796d4d0366ec9a4faa6324bf4)
++++ b/ItecOverride/app/fight.tsx	(date 1774704680791)
+@@ -1,80 +1,73 @@
+ import React, { useState, useEffect, useRef } from 'react';
+-import { StyleSheet, Text, View, Button, Dimensions, Alert } from 'react-native';
++import {StyleSheet, Text, View, Button, Dimensions, TouchableOpacity} from 'react-native';
+ import { CameraView, useCameraPermissions } from 'expo-camera';
+ import Svg, { Path } from 'react-native-svg';
+-import { useRouter } from 'expo-router';
+-
+-// Importăm clientul de socket
++// Importăm uneltele de rute pentru a prinde codul și a ne întoarce
++import { useRouter, useLocalSearchParams } from 'expo-router';
+ import { io } from "socket.io-client";
+ 
+ // ==========================================
+-// CONFIGURARE CRITICĂ: PUNE IP-UL TĂU AICI!
+-// Nu folosi 'localhost', telefoanele nu îl văd.
++// PUNE IP-UL TĂU AICI (ca și până acum)
+ // ==========================================
+-const LAPTOP_IP = "LAPTOP_IP"; // Ex: "192.168.1.15"
++const LAPTOP_IP = "ADRESA_TA_DE_IP_AICI";
+ const SERVER_URL = `http://${LAPTOP_IP}:3000`;
+ 
+-
+ type Point = { x: number; y: number };
+-type Line = { points: Point[]; color: string; id: string }; // Adăugăm ID unic
++type Line = { points: Point[]; color: string; id: string };
+ 
+ const { width, height } = Dimensions.get('window');
+ 
+ export default function FightScreen() {
++    const router = useRouter();
++    // Prindem parametrul 'room' trimis de pe ecranul Home
++    const { room } = useLocalSearchParams();
++
+     const [permission, requestPermission] = useCameraPermissions();
+     const [lines, setLines] = useState<Line[]>([]);
+     const [currentLine, setCurrentLine] = useState<Point[]>([]);
+-    const [strokeColor, setStrokeColor] = useState("#39ff14"); // Verde neon
++    const [strokeColor, setStrokeColor] = useState("#39ff14");
+     const [connected, setConnected] = useState(false);
+-    const router = useRouter();
+ 
+-    // Folosim useRef pentru socket ca să nu se re-creeze la fiecare randare
+     const socketRef = useRef<any>(null);
+ 
+-    // 1. Efectul pentru gestionarea conexiunii WebSocket
+     useEffect(() => {
+-        console.log(`Încercăm conectarea la server: ${SERVER_URL}`);
++        // Ne asigurăm că avem un cod de cameră înainte să ne conectăm
++        if (!room) return;
+ 
+-        // Creăm conexiunea
++        console.log(`Ne conectăm la server pentru afișul: ${room}`);
++
+         socketRef.current = io(SERVER_URL, {
+-            transports: ['websocket'], // Forțăm WebSocket pentru viteză
++            transports: ['websocket'],
+         });
+ 
+-        // Ascultăm evenimentele
+         socketRef.current.on('connect', () => {
+-            console.log('Conectat la serverul iTEC!');
++            console.log('Conectat! Cerem acces în camera:', room);
+             setConnected(true);
+-        });
+ 
+-        socketRef.current.on('connect_error', (err: any) => {
+-            console.log('Eroare conexiune server:', err.message);
+-            setConnected(false);
++            // 1. Spunem serverului în ce cameră/afiș vrem să intrăm
++            socketRef.current.emit('joinRoom', room);
+         });
+ 
+-        // Când ne conectăm prima dată, primim istoricul
++        // 2. Primim istoricul DOAR pentru acest afiș
+         socketRef.current.on('initHistory', (history: Line[]) => {
+-            console.log(`Am primit ${history.length} linii de istoric.`);
+-            setLines(history);
++            setLines(history || []); // history poate fi undefined dacă e cameră nouă
+         });
+ 
+-        // Când cineva trimite o linie nouă în timp real
++        // 3. Primim o linie nouă (doar de la cei din aceeași cameră)
+         socketRef.current.on('newLine', (newLine: Line) => {
+-            console.log('Am primit o linie nouă prin broadcast!');
+             setLines((prev) => [...prev, newLine]);
+         });
+ 
+-        // Când cineva șterge tot
++        // 4. Ștergerea canvasului (doar pentru acest afiș)
+         socketRef.current.on('clearCanvas', () => {
+             setLines([]);
+         });
+ 
+-        // Curățarea conexiunii când închidem aplicația
+         return () => {
+             if (socketRef.current) socketRef.current.disconnect();
+         };
+-    }, []);
++    }, [room]); // Re-rulăm efectul dacă se schimbă camera
+ 
+-    // 2. Verificăm permisiunile pentru cameră
+     if (!permission || !permission.granted) {
+         return (
+             <View style={styles.container}>
+@@ -84,7 +77,6 @@
+         );
+     }
+ 
+-    // 3. Funcții pentru a capta desenul cu degetul
+     const handleTouchStart = (event: any) => {
+         const { locationX, locationY } = event.nativeEvent;
+         setCurrentLine([{ x: locationX, y: locationY }]);
+@@ -96,46 +88,40 @@
+     };
+ 
+     const handleTouchEnd = () => {
+-        if (currentLine.length > 1) { // Minim 2 puncte pentru o linie
++        if (currentLine.length > 1) {
+             const newLine: Line = {
+                 points: currentLine,
+                 color: strokeColor,
+-                id: `${socketRef.current?.id}_${Date.now()}` // ID unic bazat pe socket și timp
++                id: `${socketRef.current?.id}_${Date.now()}`
+             };
+ 
+-            // Adăugăm local
+             setLines((prev) => [...prev, newLine]);
+ 
+-            // TRMITEM LINIA LA SERVER ÎN TIMP REAL!
++            // Modificare AICI: Trimitem linia ȘI codul camerei
+             if (socketRef.current && connected) {
+-                socketRef.current.emit('sendLine', newLine);
+-                console.log('Linie trimisă la server.');
++                socketRef.current.emit('sendLine', { line: newLine, roomId: room });
+             }
+ 
+-            setCurrentLine([]); // Resetăm linia curentă
++            setCurrentLine([]);
+         }
+     };
+ 
+-    // Funcția pentru ștergere sincronizată
+     const requestClearAll = () => {
++        // Modificare AICI: Spunem serverului ce cameră să șteargă
+         if (socketRef.current && connected) {
+-            socketRef.current.emit('requestClear');
++            socketRef.current.emit('requestClear', room);
+         }
+     };
+ 
+-    // Transformăm array-ul de puncte într-un format înțeles de SVG
+     const createSvgPath = (points: Point[]) => {
+         if (points.length === 0) return '';
+-        const path = points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x} ${p.y}`);
+-        return path.join(' ');
++        return points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+     };
+ 
+     return (
+         <View style={styles.container}>
+-            {/* Stratul 1: Camera care vede lumea reală */}
+             <CameraView style={StyleSheet.absoluteFill} facing="back" />
+ 
+-            {/* Stratul 2: Canvas-ul invizibil pe care desenăm */}
+             <View
+                 style={StyleSheet.absoluteFill}
+                 onTouchStart={handleTouchStart}
+@@ -143,39 +129,30 @@
+                 onTouchEnd={handleTouchEnd}
+             >
+                 <Svg width={width} height={height}>
+-                    {/* Desenăm liniile deja finalizate (locale + primite) */}
+                     {lines.map((line) => (
+-                        <Path
+-                            key={line.id}
+-                            d={createSvgPath(line.points)}
+-                            stroke={line.color}
+-                            strokeWidth={8}
+-                            strokeLinecap="round"
+-                            strokeLinejoin="round"
+-                            fill="none"
+-                        />
++                        <Path key={line.id} d={createSvgPath(line.points)} stroke={line.color} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                     ))}
+-
+-                    {/* Desenăm linia care este în curs de creare locală (live) */}
+                     {currentLine.length > 0 && (
+-                        <Path
+-                            d={createSvgPath(currentLine)}
+-                            stroke={strokeColor}
+-                            strokeWidth={8}
+-                            strokeLinecap="round"
+-                            strokeLinejoin="round"
+-                            fill="none"
+-                        />
++                        <Path d={createSvgPath(currentLine)} stroke={strokeColor} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                     )}
+                 </Svg>
+             </View>
+ 
+-            {/* UI pentru debugging și culori */}
++            {/* Bara de Sus: Arătăm codul Afișului */}
++            <View style={styles.topBar}>
++                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
++                    <Text style={styles.backBtnText}>◀ RETRAGERE</Text>
++                </TouchableOpacity>
++                <View style={styles.roomBadge}>
++                    <Text style={styles.roomBadgeText}>AFIȘ: {room}</Text>
++                </View>
++            </View>
++
++            {/* Bara de Jos: UI pentru culori */}
+             <View style={styles.uiContainer}>
+                 <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+-                    {/* Indicator de conexiune */}
+                     <View style={[styles.statusDot, {backgroundColor: connected ? '#39ff14' : 'red'}]} />
+-                    <Text style={styles.title}>SYNC MODE</Text>
++                    <Text style={styles.title}>SYNC</Text>
+                 </View>
+ 
+                 <View style={styles.palette}>
+@@ -183,55 +160,43 @@
+                         <View
+                             key={color}
+                             onTouchStart={() => setStrokeColor(color)}
+-                            style={[
+-                                styles.colorCircle,
+-                                { backgroundColor: color, borderWidth: strokeColor === color ? 3 : 0 }
+-                            ]}
++                            style={[styles.colorCircle, { backgroundColor: color, borderWidth: strokeColor === color ? 3 : 0 }]}
+                         />
+                     ))}
+                 </View>
+-                <Button title="Ieși" onPress={() => router.back()} color="#ff003c" />
+-                <Button title="Șterge Tot" onPress={requestClearAll} color="#444" />
++
++                <TouchableOpacity onPress={requestClearAll} style={styles.clearBtn}>
++                    <Text style={styles.clearBtnText}>BOMB</Text>
++                </TouchableOpacity>
+             </View>
+         </View>
+     );
+ }
+ 
+ const styles = StyleSheet.create({
+-    container: {
+-        flex: 1,
+-        backgroundColor: '#000',
+-    },
+-    uiContainer: {
++    container: { flex: 1, backgroundColor: '#000' },
++
++    // Stiluri pentru bara de sus
++    topBar: {
+         position: 'absolute',
+-        bottom: 30,
+-        left: 10,
+-        right: 10,
+-        backgroundColor: 'rgba(0,0,0,0.7)',
+-        padding: 15,
+-        borderRadius: 15,
+-        gap: 10,
+-    },
+-    palette: {
++        top: 50, // Lăsăm loc pentru notch-ul telefoanelor
++        left: 20,
++        right: 20,
+         flexDirection: 'row',
+-        justifyContent: 'center',
+-        gap: 10,
+-        marginVertical: 5,
+-    },
+-    colorCircle: {
+-        width: 35,
+-        height: 35,
+-        borderRadius: 18,
+-        borderColor: '#fff',
++        justifyContent: 'space-between',
++        alignItems: 'center',
+     },
+-    title: {
+-        color: 'white',
+-        fontWeight: 'bold',
+-        fontSize: 14,
+-    },
+-    statusDot: {
+-        width: 10,
+-        height: 10,
+-        borderRadius: 5,
+-    }
++    backBtn: { backgroundColor: 'rgba(0,0,0,0.6)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#ff003c' },
++    backBtnText: { color: '#ff003c', fontWeight: 'bold' },
++    roomBadge: { backgroundColor: 'rgba(57, 255, 20, 0.2)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#39ff14' },
++    roomBadgeText: { color: '#39ff14', fontWeight: 'bold', fontSize: 16, letterSpacing: 2 },
++
++    // Stiluri pentru bara de jos
++    uiContainer: { position: 'absolute', bottom: 30, left: 10, right: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 15, borderRadius: 15 },
++    palette: { flexDirection: 'row', gap: 10 },
++    colorCircle: { width: 35, height: 35, borderRadius: 18, borderColor: '#fff' },
++    title: { color: 'white', fontWeight: 'bold', fontSize: 14 },
++    statusDot: { width: 10, height: 10, borderRadius: 5 },
++    clearBtn: { backgroundColor: '#ff003c', padding: 10, borderRadius: 8 },
++    clearBtnText: { color: 'white', fontWeight: 'bold' }
+ });
+\ No newline at end of file
+Index: ItecOverride/app/index.tsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React from 'react';\nimport { StyleSheet, Text, View, TouchableOpacity } from 'react-native';\nimport { useRouter } from 'expo-router';\n\nexport default function Home() {\n    const router = useRouter();\n\n    return (\n        <View style={styles.container}>\n            {/* Titlul aplicației */}\n            <View style={styles.header}>\n                <Text style={styles.title}>iTEC:</Text>\n                <Text style={styles.subtitle}>OVERRIDE</Text>\n            </View>\n\n            <Text style={styles.description}>\n                Orașul este plin de ecrane care nu vă aparțin.{\"\\n\"}\n                Revendicați teritoriul. Lăsați-vă amprenta.\n            </Text>\n\n            {/* Butonul care te duce în ecranul de Fight */}\n            <TouchableOpacity\n                style={styles.fightButton}\n                onPress={() => router.push('/fight' as any)}\n            >\n                <Text style={styles.fightButtonText}>FIGHT (Scan & Override)</Text>\n            </TouchableOpacity>\n\n            {/* Un placeholder pentru o viitoare hartă sau clasament */}\n            <TouchableOpacity style={styles.secondaryButton}>\n                <Text style={styles.secondaryButtonText}>Vezi Harta Teritoriilor</Text>\n            </TouchableOpacity>\n        </View>\n    );\n}\n\nconst styles = StyleSheet.create({\n    container: {\n        flex: 1,\n        backgroundColor: '#0a0a0a', // Un negru cyberpunk\n        alignItems: 'center',\n        justifyContent: 'center',\n        padding: 20,\n    },\n    header: {\n        alignItems: 'center',\n        marginBottom: 40,\n    },\n    title: {\n        fontSize: 40,\n        fontWeight: '900',\n        color: '#ffffff',\n        letterSpacing: 2,\n    },\n    subtitle: {\n        fontSize: 50,\n        fontWeight: '900',\n        color: '#ff003c', // Roșu agresiv\n        letterSpacing: 5,\n        textShadowColor: '#ff003c',\n        textShadowOffset: { width: 0, height: 0 },\n        textShadowRadius: 10,\n    },\n    description: {\n        color: '#888',\n        textAlign: 'center',\n        fontSize: 16,\n        marginBottom: 60,\n        lineHeight: 24,\n    },\n    fightButton: {\n        backgroundColor: '#39ff14', // Verde neon\n        paddingVertical: 20,\n        paddingHorizontal: 40,\n        borderRadius: 10,\n        marginBottom: 20,\n        width: '100%',\n        alignItems: 'center',\n        shadowColor: '#39ff14',\n        shadowOffset: { width: 0, height: 0 },\n        shadowOpacity: 0.8,\n        shadowRadius: 15,\n        elevation: 10,\n    },\n    fightButtonText: {\n        color: '#000',\n        fontSize: 20,\n        fontWeight: '900',\n        letterSpacing: 1,\n    },\n    secondaryButton: {\n        paddingVertical: 15,\n        paddingHorizontal: 40,\n        borderRadius: 10,\n        borderWidth: 2,\n        borderColor: '#444',\n        width: '100%',\n        alignItems: 'center',\n    },\n    secondaryButtonText: {\n        color: '#fff',\n        fontSize: 16,\n        fontWeight: 'bold',\n    },\n});
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/ItecOverride/app/index.tsx b/ItecOverride/app/index.tsx
+--- a/ItecOverride/app/index.tsx	(revision 66cc43753ca9388796d4d0366ec9a4faa6324bf4)
++++ b/ItecOverride/app/index.tsx	(date 1774650875262)
+@@ -1,105 +1,75 @@
+-import React from 'react';
+-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
++import React, { useState } from 'react';
++import { StyleSheet, Text, View, TouchableOpacity, TextInput, Alert } from 'react-native';
+ import { useRouter } from 'expo-router';
+ 
+ export default function Home() {
+     const router = useRouter();
++    // Păstrăm codul camerei scris de user
++    const [roomCode, setRoomCode] = useState('');
++
++    const handleFightPress = () => {
++        if (roomCode.trim() === '') {
++            Alert.alert("Eroare", "Trebuie să introduci codul afișului (ex: 1234) pentru a intra în luptă!");
++            return;
++        }
++
++        // Navigăm către Fight și trimitem codul camerei ca parametru
++        router.push({
++            pathname: '/fight' as any,
++            params: { room: roomCode.toUpperCase() } // Forțăm litere mari să fie uniform
++        });
++    };
+ 
+     return (
+         <View style={styles.container}>
+-            {/* Titlul aplicației */}
+             <View style={styles.header}>
+                 <Text style={styles.title}>iTEC:</Text>
+                 <Text style={styles.subtitle}>OVERRIDE</Text>
+             </View>
+ 
+             <Text style={styles.description}>
+-                Orașul este plin de ecrane care nu vă aparțin.{"\n"}
+-                Revendicați teritoriul. Lăsați-vă amprenta.
++                Fiecare afiș este un câmp de luptă.{"\n"}Introdu codul pentru a te conecta.
+             </Text>
+ 
+-            {/* Butonul care te duce în ecranul de Fight */}
+-            <TouchableOpacity
+-                style={styles.fightButton}
+-                onPress={() => router.push('/fight' as any)}
+-            >
+-                <Text style={styles.fightButtonText}>FIGHT (Scan & Override)</Text>
+-            </TouchableOpacity>
++            {/* Câmpul nou pentru introducerea codului */}
++            <TextInput
++                style={styles.input}
++                placeholder="COD AFIȘ (ex: A-01)"
++                placeholderTextColor="#666"
++                value={roomCode}
++                onChangeText={setRoomCode}
++                autoCapitalize="characters"
++            />
+ 
+-            {/* Un placeholder pentru o viitoare hartă sau clasament */}
+-            <TouchableOpacity style={styles.secondaryButton}>
+-                <Text style={styles.secondaryButtonText}>Vezi Harta Teritoriilor</Text>
++            <TouchableOpacity style={styles.fightButton} onPress={handleFightPress}>
++                <Text style={styles.fightButtonText}>CONNECT & OVERRIDE</Text>
+             </TouchableOpacity>
+         </View>
+     );
+ }
+ 
+ const styles = StyleSheet.create({
+-    container: {
+-        flex: 1,
+-        backgroundColor: '#0a0a0a', // Un negru cyberpunk
+-        alignItems: 'center',
+-        justifyContent: 'center',
+-        padding: 20,
+-    },
+-    header: {
+-        alignItems: 'center',
+-        marginBottom: 40,
+-    },
+-    title: {
+-        fontSize: 40,
+-        fontWeight: '900',
+-        color: '#ffffff',
+-        letterSpacing: 2,
+-    },
+-    subtitle: {
+-        fontSize: 50,
+-        fontWeight: '900',
+-        color: '#ff003c', // Roșu agresiv
+-        letterSpacing: 5,
+-        textShadowColor: '#ff003c',
+-        textShadowOffset: { width: 0, height: 0 },
+-        textShadowRadius: 10,
+-    },
+-    description: {
+-        color: '#888',
+-        textAlign: 'center',
+-        fontSize: 16,
+-        marginBottom: 60,
+-        lineHeight: 24,
+-    },
+-    fightButton: {
+-        backgroundColor: '#39ff14', // Verde neon
+-        paddingVertical: 20,
+-        paddingHorizontal: 40,
++    container: { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', padding: 20 },
++    header: { alignItems: 'center', marginBottom: 30 },
++    title: { fontSize: 40, fontWeight: '900', color: '#ffffff', letterSpacing: 2 },
++    subtitle: { fontSize: 50, fontWeight: '900', color: '#ff003c', letterSpacing: 5, textShadowColor: '#ff003c', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 10 },
++    description: { color: '#888', textAlign: 'center', fontSize: 16, marginBottom: 30, lineHeight: 24 },
++
++    // Stilul pentru noul input
++    input: {
++        backgroundColor: '#1a1a1a',
++        color: '#39ff14',
++        width: '100%',
++        padding: 15,
+         borderRadius: 10,
+-        marginBottom: 20,
+-        width: '100%',
+-        alignItems: 'center',
+-        shadowColor: '#39ff14',
+-        shadowOffset: { width: 0, height: 0 },
+-        shadowOpacity: 0.8,
+-        shadowRadius: 15,
+-        elevation: 10,
+-    },
+-    fightButtonText: {
+-        color: '#000',
+         fontSize: 20,
+-        fontWeight: '900',
+-        letterSpacing: 1,
+-    },
+-    secondaryButton: {
+-        paddingVertical: 15,
+-        paddingHorizontal: 40,
+-        borderRadius: 10,
+-        borderWidth: 2,
+-        borderColor: '#444',
+-        width: '100%',
+-        alignItems: 'center',
+-    },
+-    secondaryButtonText: {
+-        color: '#fff',
+-        fontSize: 16,
+         fontWeight: 'bold',
++        textAlign: 'center',
++        marginBottom: 20,
++        borderWidth: 1,
++        borderColor: '#333'
+     },
++
++    fightButton: { backgroundColor: '#39ff14', paddingVertical: 20, paddingHorizontal: 40, borderRadius: 10, marginBottom: 20, width: '100%', alignItems: 'center', shadowColor: '#39ff14', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 15, elevation: 10 },
++    fightButtonText: { color: '#000', fontSize: 20, fontWeight: '900', letterSpacing: 1 },
+ });
+\ No newline at end of file
+Index: itec-server/server.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// server.js\nconst express = require('express');\nconst http = require('http');\nconst { Server } = require(\"socket.io\");\n\nconst app = express();\nconst server = http.createServer(app);\n\n// Configurăm Socket.io cu CORS (ca să permită conexiuni de la telefon)\nconst io = new Server(server, {\n    cors: {\n        origin: \"*\", // Permite orice conexiune (bun pentru hackathon)\n        methods: [\"GET\", \"POST\"]\n    }\n});\n\nlet drawingHistory = []; // Păstrăm tot graffiti-ul aici\n\nio.on('connection', (socket) => {\n    console.log('Un utilizator s-a conectat: ' + socket.id);\n\n    // Când un user se conectează, îi trimitem istoricul desenului existent\n    socket.emit('initHistory', drawingHistory);\n\n    // Ascultăm când cineva termină de desenat o linie nouă\n    socket.on('sendLine', (newLine) => {\n        // Salvăm linia în istoric\n        drawingHistory.push(newLine);\n        // Trimitem linia TUTUROR celorlalți utilizatori conectați (broadcast)\n        socket.broadcast.emit('newLine', newLine);\n        console.log('Linie nouă primită și trimisă mai departe.');\n    });\n\n    // Gestionăm curățarea ecranului\n    socket.on('requestClear', () => {\n        drawingHistory = [];\n        io.emit('clearCanvas'); // Anunțăm pe toată lumea să șteargă\n        console.log('Canvas-ul a fost șters de un utilizator.');\n    });\n\n    socket.on('disconnect', () => {\n        console.log('Un utilizator s-a deconectat.');\n    });\n});\n\n// Pornim serverul pe portul 3000\nconst PORT = 3000;\nserver.listen(PORT, () => {\n    console.log(`Serverul iTEC:OVERRIDE rulează pe http://localhost:${PORT}`);\n});
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/itec-server/server.js b/itec-server/server.js
+--- a/itec-server/server.js	(revision 66cc43753ca9388796d4d0366ec9a4faa6324bf4)
++++ b/itec-server/server.js	(date 1774704680800)
+@@ -1,4 +1,3 @@
+-// server.js
+ const express = require('express');
+ const http = require('http');
+ const { Server } = require("socket.io");
+@@ -6,45 +5,54 @@
+ const app = express();
+ const server = http.createServer(app);
+ 
+-// Configurăm Socket.io cu CORS (ca să permită conexiuni de la telefon)
+ const io = new Server(server, {
+-    cors: {
+-        origin: "*", // Permite orice conexiune (bun pentru hackathon)
+-        methods: ["GET", "POST"]
+-    }
++    cors: { origin: "*", methods: ["GET", "POST"] }
+ });
+ 
+-let drawingHistory = []; // Păstrăm tot graffiti-ul aici
++// Acum stocăm istoricul pe camere (ex: { "PARTER-01": [linie1, linie2], "ETAJ-02": [linie1] })
++let roomsHistory = {};
+ 
+ io.on('connection', (socket) => {
+-    console.log('Un utilizator s-a conectat: ' + socket.id);
++    console.log('User conectat: ' + socket.id);
++
++    // 1. Userul cere să intre într-o cameră (afiș)
++    socket.on('joinRoom', (roomId) => {
++        socket.join(roomId);
++        console.log(`Userul ${socket.id} a intrat în camera/afișul: ${roomId}`);
++
++        // Dacă afișul nu există în memorie, îl creăm
++        if (!roomsHistory[roomId]) {
++            roomsHistory[roomId] = [];
++        }
++
++        // Îi trimitem DOAR istoricul acelui afiș
++        socket.emit('initHistory', roomsHistory[roomId]);
++    });
+ 
+-    // Când un user se conectează, îi trimitem istoricul desenului existent
+-    socket.emit('initHistory', drawingHistory);
++    // 2. Userul desenează ceva pe afișul lui
++    socket.on('sendLine', (data) => {
++        // data conține { line: newLine, roomId: "PARTER-01" }
++        const { line, roomId } = data;
+ 
+-    // Ascultăm când cineva termină de desenat o linie nouă
+-    socket.on('sendLine', (newLine) => {
+-        // Salvăm linia în istoric
+-        drawingHistory.push(newLine);
+-        // Trimitem linia TUTUROR celorlalți utilizatori conectați (broadcast)
+-        socket.broadcast.emit('newLine', newLine);
+-        console.log('Linie nouă primită și trimisă mai departe.');
++        if (roomsHistory[roomId]) {
++            roomsHistory[roomId].push(line);
++            // Trimitem linia DOAR celorlalți useri din aceeași cameră (socket.to)
++            socket.to(roomId).emit('newLine', line);
++        }
+     });
+ 
+-    // Gestionăm curățarea ecranului
+-    socket.on('requestClear', () => {
+-        drawingHistory = [];
+-        io.emit('clearCanvas'); // Anunțăm pe toată lumea să șteargă
+-        console.log('Canvas-ul a fost șters de un utilizator.');
++    // 3. Userul șterge afișul
++    socket.on('requestClear', (roomId) => {
++        roomsHistory[roomId] = [];
++        io.to(roomId).emit('clearCanvas');
++        console.log(`Afișul ${roomId} a fost șters.`);
+     });
+ 
+     socket.on('disconnect', () => {
+-        console.log('Un utilizator s-a deconectat.');
++        console.log('User deconectat: ' + socket.id);
+     });
+ });
+ 
+-// Pornim serverul pe portul 3000
+-const PORT = 3000;
+-server.listen(PORT, () => {
+-    console.log(`Serverul iTEC:OVERRIDE rulează pe http://localhost:${PORT}`);
++server.listen(3000, () => {
++    console.log(`Serverul iTEC cu ROOMS rulează pe http://localhost:3000`);
+ });
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"AutoImportSettings\">\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\n  </component>\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"047501ca-0fe1-451b-bc4e-84366b06ea0a\" name=\"Changes\" comment=\"Add initial WebSocket server and client integration for real-time drawing synchronization\">\n      <change afterPath=\"$PROJECT_DIR$/ItecOverride/app/fight.tsx\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/ItecOverride/app/_layout.tsx\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ItecOverride/app/_layout.tsx\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/ItecOverride/app/index.tsx\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ItecOverride/app/index.tsx\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/ItecOverride/package-lock.json\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ItecOverride/package-lock.json\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/ItecOverride/package.json\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ItecOverride/package.json\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"EmbeddingIndexingInfo\">\n    <option name=\"cachedIndexableFilesCount\" value=\"36\" />\n    <option name=\"fileBasedEmbeddingIndicesEnabled\" value=\"true\" />\n  </component>\n  <component name=\"FileTemplateManagerImpl\">\n    <option name=\"RECENT_TEMPLATES\">\n      <list>\n        <option value=\"JavaScript File\" />\n      </list>\n    </option>\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"GitHubPullRequestSearchHistory\">{\n  &quot;lastFilter&quot;: {\n    &quot;state&quot;: &quot;OPEN&quot;,\n    &quot;assignee&quot;: &quot;RazvanBontilaO&quot;\n  }\n}</component>\n  <component name=\"GithubPullRequestsUISettings\">{\n  &quot;selectedUrlAndAccountId&quot;: {\n    &quot;url&quot;: &quot;https://github.com/MarcoIsac/Itec_Mobile.git&quot;,\n    &quot;accountId&quot;: &quot;e60dcee4-02cb-4e3d-852c-150358bce672&quot;\n  }\n}</component>\n  <component name=\"HighlightingSettingsPerFile\">\n    <setting file=\"file://$PROJECT_DIR$/ItecOverride/app/index.tsx\" root0=\"SKIP_INSPECTION\" />\n  </component>\n  <component name=\"McpProjectServerCommands\">\n    <commands />\n    <urls />\n  </component>\n  <component name=\"PackageJsonUpdateNotifier\">\n    <dismissed value=\"$PROJECT_DIR$/ItecOverride/package.json\" />\n  </component>\n  <component name=\"ProblemsViewState\">\n    <option name=\"selectedTabId\" value=\"CurrentFile\" />\n  </component>\n  <component name=\"ProjectColorInfo\">{\n  &quot;associatedIndex&quot;: 6,\n  &quot;fromUser&quot;: false\n}</component>\n  <component name=\"ProjectId\" id=\"3BXaWPaHpeXMhqRgAmO6SN7MSEc\" />\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\">{\n  &quot;keyToString&quot;: {\n    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,\n    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,\n    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,\n    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,\n    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,\n    &quot;git-widget-placeholder&quot;: &quot;main&quot;,\n    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,\n    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,\n    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,\n    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,\n    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,\n    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,\n    &quot;nodejs_interpreter_path&quot;: &quot;/Users/user/Library/Application Support/JetBrains/WebStorm2026.1/node/versions/24.14.1/bin/node&quot;,\n    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,\n    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.runtime&quot;,\n    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,\n    &quot;ts.external.directory.path&quot;: &quot;/Users/user/Desktop/iTEC/ItecOverride/node_modules/typescript/lib&quot;,\n    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;\n  }\n}</component>\n  <component name=\"SharedIndexes\">\n    <attachedChunks>\n      <set>\n        <option value=\"bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274\" />\n      </set>\n    </attachedChunks>\n  </component>\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"047501ca-0fe1-451b-bc4e-84366b06ea0a\" name=\"Changes\" comment=\"\" />\n      <created>1774637901198</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1774637901198</updated>\n      <workItem from=\"1774637902564\" duration=\"2943000\" />\n      <workItem from=\"1774641184569\" duration=\"1020000\" />\n      <workItem from=\"1774642210871\" duration=\"978000\" />\n      <workItem from=\"1774646090066\" duration=\"1105000\" />\n    </task>\n    <task id=\"LOCAL-00001\" summary=\"Update dependencies and simplify TypeScript configuration\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1774641225922</created>\n      <option name=\"number\" value=\"00001\" />\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1774641225922</updated>\n    </task>\n    <task id=\"LOCAL-00002\" summary=\"Add support for camera and SVG-based drawings with new dependencies\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1774642440594</created>\n      <option name=\"number\" value=\"00002\" />\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1774642440594</updated>\n    </task>\n    <task id=\"LOCAL-00003\" summary=\"Add initial WebSocket server and client integration for real-time drawing synchronization\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1774643166689</created>\n      <option name=\"number\" value=\"00003\" />\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1774643166689</updated>\n    </task>\n    <option name=\"localTasksCounter\" value=\"4\" />\n    <servers />\n  </component>\n  <component name=\"TypeScriptGeneratedFilesManager\">\n    <option name=\"version\" value=\"3\" />\n  </component>\n  <component name=\"Vcs.Log.Tabs.Properties\">\n    <option name=\"TAB_STATES\">\n      <map>\n        <entry key=\"MAIN\">\n          <value>\n            <State />\n          </value>\n        </entry>\n      </map>\n    </option>\n  </component>\n  <component name=\"VcsManagerConfiguration\">\n    <MESSAGE value=\"Update dependencies and simplify TypeScript configuration\" />\n    <MESSAGE value=\"Add support for camera and SVG-based drawings with new dependencies\" />\n    <MESSAGE value=\"Add initial WebSocket server and client integration for real-time drawing synchronization\" />\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"Add initial WebSocket server and client integration for real-time drawing synchronization\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 66cc43753ca9388796d4d0366ec9a4faa6324bf4)
++++ b/.idea/workspace.xml	(date 1774706833709)
+@@ -4,13 +4,11 @@
+     <option name="autoReloadType" value="SELECTIVE" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Add initial WebSocket server and client integration for real-time drawing synchronization">
+-      <change afterPath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" afterDir="false" />
++    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`.">
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/ItecOverride/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/_layout.tsx" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/ItecOverride/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/index.tsx" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/ItecOverride/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package-lock.json" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/ItecOverride/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package.json" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/itec-server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/itec-server/server.js" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -18,7 +16,7 @@
+     <option name="LAST_RESOLUTION" value="IGNORE" />
+   </component>
+   <component name="EmbeddingIndexingInfo">
+-    <option name="cachedIndexableFilesCount" value="36" />
++    <option name="cachedIndexableFilesCount" value="37" />
+     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+   </component>
+   <component name="FileTemplateManagerImpl">
+@@ -29,7 +27,13 @@
+     </option>
+   </component>
+   <component name="Git.Settings">
++    <option name="RECENT_BRANCH_BY_REPOSITORY">
++      <map>
++        <entry key="$PROJECT_DIR$" value="main" />
++      </map>
++    </option>
+     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
++    <option name="UPDATE_TYPE" value="REBASE" />
+   </component>
+   <component name="GitHubPullRequestSearchHistory">{
+   &quot;lastFilter&quot;: {
+@@ -44,6 +48,7 @@
+   }
+ }</component>
+   <component name="HighlightingSettingsPerFile">
++    <setting file="file://$PROJECT_DIR$/ItecOverride/app/fight.tsx" root0="SKIP_INSPECTION" />
+     <setting file="file://$PROJECT_DIR$/ItecOverride/app/index.tsx" root0="SKIP_INSPECTION" />
+   </component>
+   <component name="McpProjectServerCommands">
+@@ -65,33 +70,34 @@
+     <option name="hideEmptyMiddlePackages" value="true" />
+     <option name="showLibraryContents" value="true" />
+   </component>
+-  <component name="PropertiesComponent">{
+-  &quot;keyToString&quot;: {
+-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+-    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+-    &quot;nodejs_interpreter_path&quot;: &quot;/Users/user/Library/Application Support/JetBrains/WebStorm2026.1/node/versions/24.14.1/bin/node&quot;,
+-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+-    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.runtime&quot;,
+-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
+-    &quot;ts.external.directory.path&quot;: &quot;/Users/user/Desktop/iTEC/ItecOverride/node_modules/typescript/lib&quot;,
+-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
++  <component name="PropertiesComponent"><![CDATA[{
++  "keyToString": {
++    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
++    "ModuleVcsDetector.initialDetectionPerformed": "true",
++    "RunOnceActivity.MCP Project settings loaded": "true",
++    "RunOnceActivity.ShowReadmeOnStart": "true",
++    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
++    "RunOnceActivity.git.unshallow": "true",
++    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
++    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
++    "codeWithMe.voiceChat.enabledByDefault": "false",
++    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
++    "git-widget-placeholder": "ImageGeneratorFeature",
++    "git.auto.fetch.suggestion.counter": "3",
++    "javascript.preferred.runtime.type.id": "node",
++    "junie.onboarding.icon.badge.shown": "true",
++    "node.js.detected.package.eslint": "true",
++    "node.js.detected.package.tslint": "true",
++    "node.js.selected.package.eslint": "(autodetect)",
++    "node.js.selected.package.tslint": "(autodetect)",
++    "nodejs_interpreter_path": "/Users/user/Library/Application Support/JetBrains/WebStorm2026.1/node/versions/24.14.1/bin/node",
++    "nodejs_package_manager_path": "npm",
++    "settings.editor.selected.configurable": "settings.javascript.runtime",
++    "to.speed.mode.migration.done": "true",
++    "ts.external.directory.path": "/Users/user/Desktop/iTEC/ItecOverride/node_modules/typescript/lib",
++    "vue.rearranger.settings.migration": "true"
+   }
+-}</component>
++}]]></component>
+   <component name="SharedIndexes">
+     <attachedChunks>
+       <set>
+@@ -109,7 +115,8 @@
+       <workItem from="1774637902564" duration="2943000" />
+       <workItem from="1774641184569" duration="1020000" />
+       <workItem from="1774642210871" duration="978000" />
+-      <workItem from="1774646090066" duration="1105000" />
++      <workItem from="1774646090066" duration="1486000" />
++      <workItem from="1774650734635" duration="5019000" />
+     </task>
+     <task id="LOCAL-00001" summary="Update dependencies and simplify TypeScript configuration">
+       <option name="closed" value="true" />
+@@ -135,7 +142,15 @@
+       <option name="project" value="LOCAL" />
+       <updated>1774643166689</updated>
+     </task>
+-    <option name="localTasksCounter" value="4" />
++    <task id="LOCAL-00004" summary="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`.">
++      <option name="closed" value="true" />
++      <created>1774647544444</created>
++      <option name="number" value="00004" />
++      <option name="presentableId" value="LOCAL-00004" />
++      <option name="project" value="LOCAL" />
++      <updated>1774647544444</updated>
++    </task>
++    <option name="localTasksCounter" value="5" />
+     <servers />
+   </component>
+   <component name="TypeScriptGeneratedFilesManager">
+@@ -146,7 +161,19 @@
+       <map>
+         <entry key="MAIN">
+           <value>
+-            <State />
++            <State>
++              <option name="FILTERS">
++                <map>
++                  <entry key="branch">
++                    <value>
++                      <list>
++                        <option value="origin/mod1" />
++                      </list>
++                    </value>
++                  </entry>
++                </map>
++              </option>
++            </State>
+           </value>
+         </entry>
+       </map>
+@@ -156,6 +183,8 @@
+     <MESSAGE value="Update dependencies and simplify TypeScript configuration" />
+     <MESSAGE value="Add support for camera and SVG-based drawings with new dependencies" />
+     <MESSAGE value="Add initial WebSocket server and client integration for real-time drawing synchronization" />
+-    <option name="LAST_COMMIT_MESSAGE" value="Add initial WebSocket server and client integration for real-time drawing synchronization" />
++    <MESSAGE value="Split drawing functionality into a new `fight.tsx` screen and refactor `index.tsx` to simplify navigation. Updated `expo-router` and dependencies." />
++    <MESSAGE value="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`." />
++    <option name="LAST_COMMIT_MESSAGE" value="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`." />
+   </component>
+ </project>
+\ No newline at end of file

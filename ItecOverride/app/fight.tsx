@@ -1,80 +1,73 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, Button, Dimensions, Alert } from 'react-native';
+import {StyleSheet, Text, View, Button, Dimensions, TouchableOpacity} from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import Svg, { Path } from 'react-native-svg';
-import { useRouter } from 'expo-router';
-
-// Importăm clientul de socket
+// Importăm uneltele de rute pentru a prinde codul și a ne întoarce
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { io } from "socket.io-client";
 
 // ==========================================
-// CONFIGURARE CRITICĂ: PUNE IP-UL TĂU AICI!
-// Nu folosi 'localhost', telefoanele nu îl văd.
+// PUNE IP-UL TĂU AICI (ca și până acum)
 // ==========================================
-const LAPTOP_IP = "LAPTOP_IP"; // Ex: "192.168.1.15"
+const LAPTOP_IP = "ADRESA_TA_DE_IP_AICI";
 const SERVER_URL = `http://${LAPTOP_IP}:3000`;
 
-
 type Point = { x: number; y: number };
-type Line = { points: Point[]; color: string; id: string }; // Adăugăm ID unic
+type Line = { points: Point[]; color: string; id: string };
 
 const { width, height } = Dimensions.get('window');
 
 export default function FightScreen() {
+    const router = useRouter();
+    // Prindem parametrul 'room' trimis de pe ecranul Home
+    const { room } = useLocalSearchParams();
+
     const [permission, requestPermission] = useCameraPermissions();
     const [lines, setLines] = useState<Line[]>([]);
     const [currentLine, setCurrentLine] = useState<Point[]>([]);
-    const [strokeColor, setStrokeColor] = useState("#39ff14"); // Verde neon
+    const [strokeColor, setStrokeColor] = useState("#39ff14");
     const [connected, setConnected] = useState(false);
-    const router = useRouter();
 
-    // Folosim useRef pentru socket ca să nu se re-creeze la fiecare randare
     const socketRef = useRef<any>(null);
 
-    // 1. Efectul pentru gestionarea conexiunii WebSocket
     useEffect(() => {
-        console.log(`Încercăm conectarea la server: ${SERVER_URL}`);
+        // Ne asigurăm că avem un cod de cameră înainte să ne conectăm
+        if (!room) return;
 
-        // Creăm conexiunea
+        console.log(`Ne conectăm la server pentru afișul: ${room}`);
+
         socketRef.current = io(SERVER_URL, {
-            transports: ['websocket'], // Forțăm WebSocket pentru viteză
+            transports: ['websocket'],
         });
 
-        // Ascultăm evenimentele
         socketRef.current.on('connect', () => {
-            console.log('Conectat la serverul iTEC!');
+            console.log('Conectat! Cerem acces în camera:', room);
             setConnected(true);
+
+            // 1. Spunem serverului în ce cameră/afiș vrem să intrăm
+            socketRef.current.emit('joinRoom', room);
         });
 
-        socketRef.current.on('connect_error', (err: any) => {
-            console.log('Eroare conexiune server:', err.message);
-            setConnected(false);
-        });
-
-        // Când ne conectăm prima dată, primim istoricul
+        // 2. Primim istoricul DOAR pentru acest afiș
         socketRef.current.on('initHistory', (history: Line[]) => {
-            console.log(`Am primit ${history.length} linii de istoric.`);
-            setLines(history);
+            setLines(history || []); // history poate fi undefined dacă e cameră nouă
         });
 
-        // Când cineva trimite o linie nouă în timp real
+        // 3. Primim o linie nouă (doar de la cei din aceeași cameră)
         socketRef.current.on('newLine', (newLine: Line) => {
-            console.log('Am primit o linie nouă prin broadcast!');
             setLines((prev) => [...prev, newLine]);
         });
 
-        // Când cineva șterge tot
+        // 4. Ștergerea canvasului (doar pentru acest afiș)
         socketRef.current.on('clearCanvas', () => {
             setLines([]);
         });
 
-        // Curățarea conexiunii când închidem aplicația
         return () => {
             if (socketRef.current) socketRef.current.disconnect();
         };
-    }, []);
+    }, [room]); // Re-rulăm efectul dacă se schimbă camera
 
-    // 2. Verificăm permisiunile pentru cameră
     if (!permission || !permission.granted) {
         return (
             <View style={styles.container}>
@@ -84,7 +77,6 @@ export default function FightScreen() {
         );
     }
 
-    // 3. Funcții pentru a capta desenul cu degetul
     const handleTouchStart = (event: any) => {
         const { locationX, locationY } = event.nativeEvent;
         setCurrentLine([{ x: locationX, y: locationY }]);
@@ -96,46 +88,40 @@ export default function FightScreen() {
     };
 
     const handleTouchEnd = () => {
-        if (currentLine.length > 1) { // Minim 2 puncte pentru o linie
+        if (currentLine.length > 1) {
             const newLine: Line = {
                 points: currentLine,
                 color: strokeColor,
-                id: `${socketRef.current?.id}_${Date.now()}` // ID unic bazat pe socket și timp
+                id: `${socketRef.current?.id}_${Date.now()}`
             };
 
-            // Adăugăm local
             setLines((prev) => [...prev, newLine]);
 
-            // TRMITEM LINIA LA SERVER ÎN TIMP REAL!
+            // Modificare AICI: Trimitem linia ȘI codul camerei
             if (socketRef.current && connected) {
-                socketRef.current.emit('sendLine', newLine);
-                console.log('Linie trimisă la server.');
+                socketRef.current.emit('sendLine', { line: newLine, roomId: room });
             }
 
-            setCurrentLine([]); // Resetăm linia curentă
+            setCurrentLine([]);
         }
     };
 
-    // Funcția pentru ștergere sincronizată
     const requestClearAll = () => {
+        // Modificare AICI: Spunem serverului ce cameră să șteargă
         if (socketRef.current && connected) {
-            socketRef.current.emit('requestClear');
+            socketRef.current.emit('requestClear', room);
         }
     };
 
-    // Transformăm array-ul de puncte într-un format înțeles de SVG
     const createSvgPath = (points: Point[]) => {
         if (points.length === 0) return '';
-        const path = points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x} ${p.y}`);
-        return path.join(' ');
+        return points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
     };
 
     return (
         <View style={styles.container}>
-            {/* Stratul 1: Camera care vede lumea reală */}
             <CameraView style={StyleSheet.absoluteFill} facing="back" />
 
-            {/* Stratul 2: Canvas-ul invizibil pe care desenăm */}
             <View
                 style={StyleSheet.absoluteFill}
                 onTouchStart={handleTouchStart}
@@ -143,39 +129,30 @@ export default function FightScreen() {
                 onTouchEnd={handleTouchEnd}
             >
                 <Svg width={width} height={height}>
-                    {/* Desenăm liniile deja finalizate (locale + primite) */}
                     {lines.map((line) => (
-                        <Path
-                            key={line.id}
-                            d={createSvgPath(line.points)}
-                            stroke={line.color}
-                            strokeWidth={8}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            fill="none"
-                        />
+                        <Path key={line.id} d={createSvgPath(line.points)} stroke={line.color} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" fill="none" />
                     ))}
-
-                    {/* Desenăm linia care este în curs de creare locală (live) */}
                     {currentLine.length > 0 && (
-                        <Path
-                            d={createSvgPath(currentLine)}
-                            stroke={strokeColor}
-                            strokeWidth={8}
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            fill="none"
-                        />
+                        <Path d={createSvgPath(currentLine)} stroke={strokeColor} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" fill="none" />
                     )}
                 </Svg>
             </View>
 
-            {/* UI pentru debugging și culori */}
+            {/* Bara de Sus: Arătăm codul Afișului */}
+            <View style={styles.topBar}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+                    <Text style={styles.backBtnText}>◀ RETRAGERE</Text>
+                </TouchableOpacity>
+                <View style={styles.roomBadge}>
+                    <Text style={styles.roomBadgeText}>AFIȘ: {room}</Text>
+                </View>
+            </View>
+
+            {/* Bara de Jos: UI pentru culori */}
             <View style={styles.uiContainer}>
                 <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
-                    {/* Indicator de conexiune */}
                     <View style={[styles.statusDot, {backgroundColor: connected ? '#39ff14' : 'red'}]} />
-                    <Text style={styles.title}>SYNC MODE</Text>
+                    <Text style={styles.title}>SYNC</Text>
                 </View>
 
                 <View style={styles.palette}>
@@ -183,55 +160,43 @@ export default function FightScreen() {
                         <View
                             key={color}
                             onTouchStart={() => setStrokeColor(color)}
-                            style={[
-                                styles.colorCircle,
-                                { backgroundColor: color, borderWidth: strokeColor === color ? 3 : 0 }
-                            ]}
+                            style={[styles.colorCircle, { backgroundColor: color, borderWidth: strokeColor === color ? 3 : 0 }]}
                         />
                     ))}
                 </View>
-                <Button title="Ieși" onPress={() => router.back()} color="#ff003c" />
-                <Button title="Șterge Tot" onPress={requestClearAll} color="#444" />
+
+                <TouchableOpacity onPress={requestClearAll} style={styles.clearBtn}>
+                    <Text style={styles.clearBtnText}>BOMB</Text>
+                </TouchableOpacity>
             </View>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#000',
-    },
-    uiContainer: {
+    container: { flex: 1, backgroundColor: '#000' },
+
+    // Stiluri pentru bara de sus
+    topBar: {
         position: 'absolute',
-        bottom: 30,
-        left: 10,
-        right: 10,
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        padding: 15,
-        borderRadius: 15,
-        gap: 10,
-    },
-    palette: {
+        top: 50, // Lăsăm loc pentru notch-ul telefoanelor
+        left: 20,
+        right: 20,
         flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 10,
-        marginVertical: 5,
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
-    colorCircle: {
-        width: 35,
-        height: 35,
-        borderRadius: 18,
-        borderColor: '#fff',
-    },
-    title: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    statusDot: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-    }
+    backBtn: { backgroundColor: 'rgba(0,0,0,0.6)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#ff003c' },
+    backBtnText: { color: '#ff003c', fontWeight: 'bold' },
+    roomBadge: { backgroundColor: 'rgba(57, 255, 20, 0.2)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#39ff14' },
+    roomBadgeText: { color: '#39ff14', fontWeight: 'bold', fontSize: 16, letterSpacing: 2 },
+
+    // Stiluri pentru bara de jos
+    uiContainer: { position: 'absolute', bottom: 30, left: 10, right: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 15, borderRadius: 15 },
+    palette: { flexDirection: 'row', gap: 10 },
+    colorCircle: { width: 35, height: 35, borderRadius: 18, borderColor: '#fff' },
+    title: { color: 'white', fontWeight: 'bold', fontSize: 14 },
+    statusDot: { width: 10, height: 10, borderRadius: 5 },
+    clearBtn: { backgroundColor: '#ff003c', padding: 10, borderRadius: 8 },
+    clearBtnText: { color: 'white', fontWeight: 'bold' }
 });

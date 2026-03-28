@@ -4,17 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`.">
-      <change afterPath="$PROJECT_DIR$/ItecOverride/app/lib/generator.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ItecOverride/app/drawScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/drawScreen.tsx" afterDir="false" />
+    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Add support for camera and SVG-based drawings with new dependencies">
       <change beforePath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ItecOverride/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ItecOverride/app/lib/viro-init.ts" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/lib/viro-init.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ItecOverride/app/scanner.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/scanner.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ItecOverride/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ItecOverride/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/itec-server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/itec-server/server.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -157,7 +148,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774647544444</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Add support for camera and SVG-based drawings with new dependencies">
+      <option name="closed" value="true" />
+      <created>1774708830931</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1774708830931</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -188,10 +187,10 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Update dependencies and simplify TypeScript configuration" />
-    <MESSAGE value="Add support for camera and SVG-based drawings with new dependencies" />
     <MESSAGE value="Add initial WebSocket server and client integration for real-time drawing synchronization" />
     <MESSAGE value="Split drawing functionality into a new `fight.tsx` screen and refactor `index.tsx` to simplify navigation. Updated `expo-router` and dependencies." />
     <MESSAGE value="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`." />
-    <option name="LAST_COMMIT_MESSAGE" value="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`." />
+    <MESSAGE value="Add support for camera and SVG-based drawings with new dependencies" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add support for camera and SVG-based drawings with new dependencies" />
   </component>
 </project>

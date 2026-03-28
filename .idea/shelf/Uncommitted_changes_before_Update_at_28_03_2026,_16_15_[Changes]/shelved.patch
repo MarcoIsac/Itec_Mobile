@@ -1,0 +1,617 @@
+Index: ItecOverride/app/drawScreen.tsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import { CameraView, useCameraPermissions } from 'expo-camera';\nimport * as ImagePicker from 'expo-image-picker';\nimport { useLocalSearchParams, useRouter } from 'expo-router';\nimport { useEffect, useMemo, useRef, useState } from 'react';\nimport {\n    ActivityIndicator,\n    Alert,\n    Image,\n    Modal,\n    PanResponder,\n    ScrollView,\n    StyleSheet,\n    Text,\n    TouchableOpacity,\n    useWindowDimensions,\n    View\n} from 'react-native';\nimport { SafeAreaView } from 'react-native-safe-area-context';\nimport Svg, { Path } from 'react-native-svg';\n\nimport { getDeviceId, getServerUrl, loadPosterContent, savePosterContent } from './lib/ar-store';\nimport type { NormalizedPoint, PosterContent, PosterId, StickerRecord, StrokeRecord } from './lib/ar-types';\nimport { isPosterId, POSTER_MAP } from './lib/posters';\n\ntype DraftSticker = {\n    base64: string;\n    height: number;\n    id: string;\n    imageUri?: string;\n    mimeType: string;\n    position: NormalizedPoint;\n    scale: number;\n    uri: string;\n    width: number;\n};\n\nconst clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);\n\nconst createEmptyContent = (posterId: PosterId): PosterContent => ({\n    posterId,\n    stickers: [],\n    strokes: [],\n    updatedAt: new Date(0).toISOString(),\n});\n\nconst createId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;\n\nconst toCanvasPoint = (point: NormalizedPoint, width: number, height: number) => ({\n    x: point.x * width,\n    y: point.y * height,\n});\n\nconst buildSvgPath = (points: NormalizedPoint[], width: number, height: number) => {\n    if (!points.length) return '';\n\n    return points\n        .map((point, index) => {\n            const canvasPoint = toCanvasPoint(point, width, height);\n            return `${index === 0 ? 'M' : 'L'}${canvasPoint.x},${canvasPoint.y}`;\n        })\n        .join(' ');\n};\n\n// eslint-disable-next-line @typescript-eslint/no-unused-vars\nfunction LegacyDrawScreen() {\n    const router = useRouter();\n    const [permission, requestPermission] = useCameraPermissions();\n\n    // UI State\n    const [isModalVisible, setIsModalVisible] = useState(false);\n    const [showUI, setShowUI] = useState(true);\n\n    // Drawing State\n    const [selectedColor, setSelectedColor] = useState('#3b82f6');\n    const [brushSize, setBrushSize] = useState(10);\n    const [paths, setPaths] = useState<{ path: string; color: string; size: number }[]>([]);\n    const [currentPath, setCurrentPath] = useState<string[]>([]);\n\n    // English comment: Use refs to keep track of current settings inside PanResponder without re-creating it\n    const colorRef = useRef(selectedColor);\n    const sizeRef = useRef(brushSize);\n\n    useEffect(() => {\n        colorRef.current = selectedColor;\n        sizeRef.current = brushSize;\n    }, [selectedColor, brushSize]);\n\n    // PanResponder handles the touch gestures for drawing\n    const panResponder = useRef(\n        PanResponder.create({\n            onStartShouldSetPanResponder: () => true,\n            onMoveShouldSetPanResponder: () => true,\n            onPanResponderGrant: (evt) => {\n                const { locationX, locationY } = evt.nativeEvent;\n                // Start new path segment\n                setCurrentPath([`M${locationX},${locationY}`]);\n            },\n            onPanResponderMove: (evt) => {\n                const { locationX, locationY } = evt.nativeEvent;\n                // Update active segment with line commands\n                setCurrentPath((prev) => [...prev, `L${locationX},${locationY}`]);\n            },\n            onPanResponderRelease: (evt, gestureState) => {\n                // English comment: We finalize the path using the values from refs to ensure consistency\n                setCurrentPath((prevPath) => {\n                    if (prevPath.length > 1) {\n                        const newPathObj = {\n                            path: prevPath.join(' '),\n                            color: colorRef.current,\n                            size: sizeRef.current\n                        };\n                        setPaths((oldPaths) => [...oldPaths, newPathObj]);\n                    }\n                    return [];\n                });\n            },\n        })\n    ).current;\n\n    const colors = ['#3b82f6', '#ef4444', '#22c55e', '#eab308', '#ffffff', '#000000'];\n    const sizes = [4, 10, 20, 35];\n\n    if (!permission) return <View className=\"flex-1 bg-black\" />;\n    if (!permission.granted) {\n        return (\n            <View className=\"flex-1 justify-center items-center bg-slate-950 p-6\">\n                <Text className=\"text-white text-center mb-6\">Camera access is required</Text>\n                <TouchableOpacity onPress={requestPermission} className=\"bg-blue-600 px-8 py-4 rounded-2xl\">\n                    <Text className=\"text-white font-bold\">Enable Camera</Text>\n                </TouchableOpacity>\n            </View>\n        );\n    }\n\n    return (\n        <SafeAreaView className=\"flex-1 bg-black\" edges={['bottom']}>\n            <View className=\"flex-1 overflow-hidden\">\n                <CameraView style={StyleSheet.absoluteFill} facing=\"back\" />\n\n                {/* Drawing Surface */}\n                <View\n                    style={StyleSheet.absoluteFill}\n                    {...panResponder.panHandlers}\n                    pointerEvents=\"auto\"\n                >\n                    <Svg style={StyleSheet.absoluteFill}>\n                        {/* English comment: Render historical paths first so they stay in the background */}\n                        {paths.map((item, index) => (\n                            <Path\n                                key={`path-${index}-${item.color}`}\n                                d={item.path}\n                                stroke={item.color}\n                                strokeWidth={item.size}\n                                fill=\"none\"\n                                strokeLinecap=\"round\"\n                                strokeLinejoin=\"round\"\n                            />\n                        ))}\n                        {/* English comment: Render current active stroke */}\n                        {currentPath.length > 0 && (\n                            <Path\n                                d={currentPath.join(' ')}\n                                stroke={selectedColor}\n                                strokeWidth={brushSize}\n                                fill=\"none\"\n                                strokeLinecap=\"round\"\n                                strokeLinejoin=\"round\"\n                            />\n                        )}\n                    </Svg>\n                </View>\n\n                {/* UI Overlay */}\n                {showUI && (\n                    <View className=\"absolute top-12 left-4 right-4\">\n                        <View className=\"flex-row items-center justify-between\">\n                            <TouchableOpacity\n                                onPress={() => router.replace('/scanner')}\n                                className=\"bg-black/60 items-center justify-center rounded-2xl border border-white/20\"\n                            >\n                                <Text className=\"text-white text-md m-2\">Back to scanner</Text>\n                            </TouchableOpacity>\n\n                            <TouchableOpacity\n                                onPress={() => setIsModalVisible(true)}\n                                className=\"bg-slate-900/90 backdrop-blur-md p-4 h-12 justify-center rounded-2xl border border-white/20 flex-row items-center\"\n                            >\n                                <View style={{ backgroundColor: selectedColor }} className=\"w-4 h-4 rounded-full border border-white/40 mr-2\" />\n                                <Text className=\"text-white font-bold text-[10px] uppercase\">Settings</Text>\n                            </TouchableOpacity>\n\n                            <TouchableOpacity\n                                onPress={() => setPaths([])}\n                                className=\"bg-red-500/80 px-5 py-3 rounded-2xl border border-red-500/40\"\n                            >\n                                <Text className=\"text-white font-bold text-xs uppercase\">Clear</Text>\n                            </TouchableOpacity>\n                        </View>\n                    </View>\n                )}\n\n                <TouchableOpacity\n                    onPress={() => setShowUI(!showUI)}\n                    className=\"absolute bottom-12 self-center bg-slate-900/95 px-8 py-3 rounded-full border border-white/10 shadow-2xl\"\n                >\n                    <Text className=\"text-white/80 text-[10px] font-black tracking-[2px]\">\n                        {showUI ? 'HIDE OVERLAY' : 'SHOW OVERLAY'}\n                    </Text>\n                </TouchableOpacity>\n            </View>\n\n            {/* Settings Modal */}\n            <Modal animationType=\"slide\" transparent={true} visible={isModalVisible}>\n                <View className=\"flex-1 justify-end bg-black/40\">\n                    <View className=\"bg-slate-900 p-8 rounded-t-[40px] border-t border-white/10\">\n                        <View className=\"flex-row justify-between items-center mb-10\">\n                            <Text className=\"text-white text-2xl font-black italic\">BRUSH CONFIG</Text>\n                            <TouchableOpacity onPress={() => setIsModalVisible(false)} className=\"bg-blue-600 px-6 py-2 rounded-full\">\n                                <Text className=\"text-white font-bold\">Done</Text>\n                            </TouchableOpacity>\n                        </View>\n\n                        <Text className=\"text-slate-500 mb-4 font-bold uppercase text-[10px]\">Select Palette</Text>\n                        <View className=\"flex-row flex-wrap justify-between mb-8\">\n                            {colors.map((c, i) => (\n                                <TouchableOpacity\n                                    key={`color-${c}-${i}`}\n                                    onPress={() => setSelectedColor(c)}\n                                    style={{ backgroundColor: c }}\n                                    className={`w-12 h-12 rounded-full mb-4 ${selectedColor === c ? 'border-4 border-white scale-110' : 'border border-white/10 opacity-80'}`}\n                                />\n                            ))}\n                        </View>\n\n                        <Text className=\"text-slate-500 mb-4 font-bold uppercase text-[10px]\">Thickness</Text>\n                        <View className=\"flex-row justify-between bg-black/30 p-6 rounded-3xl items-center\">\n                            {sizes.map((s) => (\n                                <TouchableOpacity\n                                    key={`size-${s}`}\n                                    onPress={() => setBrushSize(s)}\n                                    className={`items-center justify-center rounded-full ${brushSize === s ? 'bg-blue-600/20 w-14 h-14 border border-blue-400' : 'w-12 h-12'}`}\n                                >\n                                    <View style={{ width: s * 0.7, height: s * 0.7 }} className={`rounded-full ${brushSize === s ? 'bg-blue-400' : 'bg-slate-600'}`} />\n                                </TouchableOpacity>\n                            ))}\n                        </View>\n                    </View>\n                </View>\n            </Modal>\n        </SafeAreaView>\n    );\n}\n\nexport default function DrawScreen() {\n    const router = useRouter();\n    const { posterId: rawPosterId } = useLocalSearchParams<{ posterId?: string }>();\n    const posterId = isPosterId(rawPosterId) ? rawPosterId : null;\n    const poster = posterId ? POSTER_MAP[posterId] : null;\n    const { width: screenWidth, height: screenHeight } = useWindowDimensions();\n\n    const canvasWidth = screenWidth;\n    const canvasHeight = screenHeight;\n\n    const [authorId, setAuthorId] = useState('');\n    const [content, setContent] = useState<PosterContent | null>(posterId ? createEmptyContent(posterId) : null);\n    const [draftStrokes, setDraftStrokes] = useState<StrokeRecord[]>([]);\n    const [currentStroke, setCurrentStroke] = useState<NormalizedPoint[]>([]);\n    const [draftSticker, setDraftSticker] = useState<DraftSticker | null>(null);\n    const [selectedColor, setSelectedColor] = useState('#38bdf8');\n    const [brushSize, setBrushSize] = useState(12);\n    const [tool, setTool] = useState<'draw' | 'sticker'>('draw');\n    const [isBusy, setIsBusy] = useState(true);\n    const [isSaving, setIsSaving] = useState(false);\n    const [lastSync, setLastSync] = useState('');\n    const canvasLayoutRef = useRef({ x: 0, y: 0, width: canvasWidth, height: canvasHeight });\n    const stickerStartRef = useRef<NormalizedPoint | null>(null);\n\n    useEffect(() => {\n        if (!posterId) return;\n\n        let isActive = true;\n\n        const hydrate = async () => {\n            setIsBusy(true);\n            const [resolvedAuthorId, resolvedContent] = await Promise.all([getDeviceId(), loadPosterContent(posterId)]);\n            if (!isActive) return;\n\n            setAuthorId(resolvedAuthorId);\n            setContent(resolvedContent);\n            setLastSync(new Date().toISOString());\n            setIsBusy(false);\n        };\n\n        void hydrate();\n\n        const syncTimer = setInterval(async () => {\n            const refreshed = await loadPosterContent(posterId);\n            if (!isActive) return;\n\n            setContent(refreshed);\n            setLastSync(new Date().toISOString());\n        }, 5000);\n\n        return () => {\n            isActive = false;\n            clearInterval(syncTimer);\n        };\n    }, [posterId]);\n\n    const colors = ['#38bdf8', '#ef4444', '#22c55e', '#f59e0b', '#f8fafc', '#0f172a'];\n    const brushSizes = [6, 12, 20, 28];\n\n    const combinedStrokes = useMemo(\n        () => [...(content?.strokes ?? []), ...draftStrokes],\n        [content?.strokes, draftStrokes]\n    );\n\n    const combinedStickers = useMemo(\n        () => [...(content?.stickers ?? []), ...(draftSticker ? [draftSticker] : [])],\n        [content?.stickers, draftSticker]\n    );\n\n    const normalizeTouchPoint = (x: number, y: number): NormalizedPoint => {\n        const { width, height } = canvasLayoutRef.current;\n        if (width <= 0 || height <= 0) {\n            return { x: 0.5, y: 0.5 };\n        }\n\n        return {\n            x: clamp(x / width, 0, 1),\n            y: clamp(y / height, 0, 1),\n        };\n    };\n\n    const drawingPanResponder = useMemo(() => PanResponder.create({\n        onMoveShouldSetPanResponderCapture: () => tool === 'draw',\n        onMoveShouldSetPanResponder: () => tool === 'draw',\n        onStartShouldSetPanResponderCapture: () => tool === 'draw',\n        onStartShouldSetPanResponder: () => tool === 'draw',\n        onPanResponderGrant: (event) => {\n            if (tool !== 'draw') return;\n            setCurrentStroke([normalizeTouchPoint(event.nativeEvent.locationX, event.nativeEvent.locationY)]);\n        },\n        onPanResponderMove: (event) => {\n            if (tool !== 'draw') return;\n            setCurrentStroke((previous) => [...previous, normalizeTouchPoint(event.nativeEvent.locationX, event.nativeEvent.locationY)]);\n        },\n        onPanResponderRelease: () => {\n            setCurrentStroke((strokePoints) => {\n                if (strokePoints.length < 2) return [];\n\n                setDraftStrokes((previous) => [\n                    ...previous,\n                    {\n                        authorId,\n                        color: selectedColor,\n                        createdAt: new Date().toISOString(),\n                        id: createId('stroke'),\n                        points: strokePoints,\n                        size: brushSize,\n                    }\n                ]);\n\n                return [];\n            });\n        },\n    }), [authorId, brushSize, selectedColor, tool]);\n\n    const stickerPanResponder = useMemo(() => PanResponder.create({\n        onMoveShouldSetPanResponderCapture: () => tool === 'sticker' && !!draftSticker,\n        onMoveShouldSetPanResponder: () => tool === 'sticker' && !!draftSticker,\n        onStartShouldSetPanResponderCapture: () => tool === 'sticker' && !!draftSticker,\n        onStartShouldSetPanResponder: () => tool === 'sticker' && !!draftSticker,\n        onPanResponderGrant: () => {\n            stickerStartRef.current = draftSticker?.position ?? null;\n        },\n        onPanResponderMove: (_event, gestureState) => {\n            if (!draftSticker || !stickerStartRef.current) return;\n\n            const width = canvasLayoutRef.current.width;\n            const height = canvasLayoutRef.current.height;\n\n            setDraftSticker((previous) => previous ? {\n                ...previous,\n                position: {\n                    x: clamp(stickerStartRef.current!.x + gestureState.dx / width, 0.08, 0.92),\n                    y: clamp(stickerStartRef.current!.y + gestureState.dy / height, 0.08, 0.92),\n                }\n            } : null);\n        },\n    }), [draftSticker, tool]);\n\n    const pickSticker = async () => {\n        const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();\n        if (!permission.granted) {\n            Alert.alert('Permisiune necesara', 'Trebuie permis accesul la galerie pentru a adauga stickere.');\n            return;\n        }\n\n        const result = await ImagePicker.launchImageLibraryAsync({\n            allowsEditing: true,\n            base64: true,\n            mediaTypes: ImagePicker.MediaTypeOptions.Images,\n            quality: 0.75,\n        });\n\n        if (result.canceled || !result.assets[0]?.base64) return;\n\n        const asset = result.assets[0];\n        const ratio = asset.width && asset.height ? asset.width / asset.height : 1;\n\n        setDraftSticker({\n            base64: asset.base64 ?? '',\n            height: 0.2,\n            id: createId('draft-sticker'),\n            imageUri: asset.uri,\n            mimeType: asset.mimeType ?? 'image/jpeg',\n            position: { x: 0.5, y: 0.5 },\n            scale: 1,\n            uri: asset.uri,\n            width: clamp(0.2 * ratio, 0.12, 0.45),\n        });\n        setTool('sticker');\n    };\n\n    const nudgeDraftSticker = (deltaX: number, deltaY: number) => {\n        setDraftSticker((previous) => previous ? {\n            ...previous,\n            position: {\n                x: clamp(previous.position.x + deltaX, 0.08, 0.92),\n                y: clamp(previous.position.y + deltaY, 0.08, 0.92),\n            },\n        } : null);\n    };\n\n    const submitChanges = async () => {\n        if (!posterId || !content) return;\n        if (!draftStrokes.length && !draftSticker) return;\n\n        setIsSaving(true);\n\n        const nextStickers: StickerRecord[] = draftSticker\n            ? [\n                ...content.stickers,\n                {\n                    authorId,\n                    createdAt: new Date().toISOString(),\n                    id: createId('sticker'),\n                    imageData: draftSticker.base64,\n                    mimeType: draftSticker.mimeType,\n                    position: draftSticker.position,\n                    scale: draftSticker.scale,\n                    width: draftSticker.width,\n                    height: draftSticker.height,\n                }\n            ]\n            : content.stickers;\n\n        const nextContent: PosterContent = {\n            ...content,\n            stickers: nextStickers,\n            strokes: [...content.strokes, ...draftStrokes],\n            updatedAt: new Date().toISOString(),\n        };\n\n        const saved = await savePosterContent(nextContent);\n        setContent(saved);\n        setDraftStrokes([]);\n        setCurrentStroke([]);\n        setDraftSticker(null);\n        setLastSync(new Date().toISOString());\n        setIsSaving(false);\n    };\n\n    if (!posterId || !poster) {\n        return (\n            <SafeAreaView style={drawStyles.invalidScreen}>\n                <Text style={drawStyles.invalidTitle}>Poster invalid</Text>\n                <TouchableOpacity onPress={() => router.replace('/scanner')} style={drawStyles.primaryAction}>\n                    <Text style={drawStyles.primaryActionText}>Inapoi la scanner</Text>\n                </TouchableOpacity>\n            </SafeAreaView>\n        );\n    }\n\n    if (isBusy || !content) {\n        return (\n            <SafeAreaView style={drawStyles.loadingWrapper}>\n                <ActivityIndicator size=\"large\" color=\"#38bdf8\" />\n                <Text style={drawStyles.loadingText}>Incarcam continutul pentru {poster.label}...</Text>\n            </SafeAreaView>\n        );\n    }\n\n    return (\n        <SafeAreaView style={drawStyles.screen} edges={['top', 'bottom']}>\n            <View style={drawStyles.sceneWrapper}>\n                <CameraView facing=\"back\" style={StyleSheet.absoluteFill} />\n\n                <View style={drawStyles.sceneShade} pointerEvents=\"none\" />\n\n                <View\n                    style={drawStyles.canvasStage}\n                    onLayout={(event) => {\n                        const layout = event.nativeEvent.layout;\n                        canvasLayoutRef.current = {\n                            x: layout.x,\n                            y: layout.y,\n                            width: layout.width,\n                            height: layout.height,\n                        };\n                    }}\n                >\n                    <Image source={poster.source} style={drawStyles.posterPreviewImage} resizeMode=\"cover\" />\n\n                    <Svg style={StyleSheet.absoluteFill} pointerEvents=\"none\">\n                        {combinedStrokes.map((stroke) => (\n                            <Path\n                                key={stroke.id}\n                                d={buildSvgPath(stroke.points, canvasWidth, canvasHeight)}\n                                stroke={stroke.color}\n                                strokeWidth={stroke.size}\n                                fill=\"none\"\n                                strokeLinecap=\"round\"\n                                strokeLinejoin=\"round\"\n                            />\n                        ))}\n                        {currentStroke.length > 1 && (\n                            <Path\n                                d={buildSvgPath(currentStroke, canvasWidth, canvasHeight)}\n                                stroke={selectedColor}\n                                strokeWidth={brushSize}\n                                fill=\"none\"\n                                strokeLinecap=\"round\"\n                                strokeLinejoin=\"round\"\n                            />\n                        )}\n                    </Svg>\n\n                    {combinedStickers.map((sticker) => {\n                        const stickerWidth = sticker.width * sticker.scale * canvasWidth;\n                        const stickerHeight = sticker.height * sticker.scale * canvasHeight;\n                        const left = sticker.position.x * canvasWidth - stickerWidth / 2;\n                        const top = sticker.position.y * canvasHeight - stickerHeight / 2;\n\n                        return (\n                            <Image\n                                key={sticker.id}\n                                source={{ uri: sticker.imageUri ?? sticker.uri }}\n                                style={[drawStyles.stickerPreview, { height: stickerHeight, left, top, width: stickerWidth }]}\n                                resizeMode=\"contain\"\n                            />\n                        );\n                    })}\n\n                    <View\n                        style={StyleSheet.absoluteFill}\n                        {...drawingPanResponder.panHandlers}\n                        pointerEvents={tool === 'draw' ? 'auto' : 'none'}\n                    />\n                    <View\n                        style={StyleSheet.absoluteFill}\n                        {...stickerPanResponder.panHandlers}\n                        pointerEvents={tool === 'sticker' && draftSticker ? 'auto' : 'none'}\n                    />\n                </View>\n\n                <SafeAreaView style={StyleSheet.absoluteFill} pointerEvents=\"box-none\">\n                    <View style={drawStyles.topControls}>\n                        <TouchableOpacity onPress={() => router.replace('/scanner')} style={drawStyles.floatingButton}>\n                            <Text style={drawStyles.floatingButtonText}>Back</Text>\n                        </TouchableOpacity>\n                        <View style={drawStyles.statusBox}>\n                            <Text style={drawStyles.statusHeadline}>{poster.label}</Text>\n                            <Text style={drawStyles.statusSubline}>\n                                Preview 2D full-screen pentru desen si stickere.\n                            </Text>\n                        </View>\n                    </View>\n\n                    <View style={drawStyles.bottomSheet}>\n                        <ScrollView contentContainerStyle={drawStyles.bottomSheetContent}>\n                            <View style={drawStyles.toolbarRow}>\n                                <TouchableOpacity\n                                    onPress={() => setTool('draw')}\n                                    style={[drawStyles.modeChip, tool === 'draw' && drawStyles.modeChipActive]}\n                                >\n                                    <Text style={[drawStyles.modeChipText, tool === 'draw' && drawStyles.modeChipTextActive]}>Desen</Text>\n                                </TouchableOpacity>\n                                <TouchableOpacity\n                                    onPress={pickSticker}\n                                    style={[drawStyles.modeChip, tool === 'sticker' && drawStyles.modeChipActive]}\n                                >\n                                    <Text style={[drawStyles.modeChipText, tool === 'sticker' && drawStyles.modeChipTextActive]}>Sticker</Text>\n                                </TouchableOpacity>\n                                <TouchableOpacity\n                                    onPress={() => {\n                                        setDraftStrokes([]);\n                                        setCurrentStroke([]);\n                                        setDraftSticker(null);\n                                    }}\n                                    style={drawStyles.modeChip}\n                                >\n                                    <Text style={drawStyles.modeChipText}>Anuleaza draft</Text>\n                                </TouchableOpacity>\n                            </View>\n\n                            {tool === 'draw' && (\n                                <>\n                                    <Text style={drawStyles.sectionLabel}>Paleta</Text>\n                                    <View style={drawStyles.paletteRow}>\n                                        {colors.map((color) => (\n                                            <TouchableOpacity\n                                                key={color}\n                                                onPress={() => setSelectedColor(color)}\n                                                style={[\n                                                    drawStyles.colorSwatch,\n                                                    { backgroundColor: color },\n                                                    selectedColor === color && drawStyles.colorSwatchActive,\n                                                ]}\n                                            />\n                                        ))}\n                                    </View>\n\n                                    <Text style={drawStyles.sectionLabel}>Grosime</Text>\n                                    <View style={drawStyles.brushRow}>\n                                        {brushSizes.map((size) => (\n                                            <TouchableOpacity\n                                                key={size}\n                                                onPress={() => setBrushSize(size)}\n                                                style={[drawStyles.brushChip, brushSize === size && drawStyles.brushChipActive]}\n                                            >\n                                                <View\n                                                    style={{\n                                                        backgroundColor: brushSize === size ? '#38bdf8' : '#64748b',\n                                                        borderRadius: 999,\n                                                        height: size,\n                                                        width: size,\n                                                    }}\n                                                />\n                                            </TouchableOpacity>\n                                        ))}\n                                    </View>\n                                </>\n                            )}\n\n                            {tool === 'sticker' && (\n                                <>\n                                    <Text style={drawStyles.sectionLabel}>Redimensionare sticker</Text>\n                                    <View style={drawStyles.stickerScaleRow}>\n                                        <TouchableOpacity\n                                            onPress={() => setDraftSticker((previous) => previous ? { ...previous, scale: clamp(previous.scale - 0.15, 0.4, 2.5) } : null)}\n                                            style={drawStyles.scaleButton}\n                                        >\n                                            <Text style={drawStyles.scaleButtonText}>Mai mic</Text>\n                                        </TouchableOpacity>\n                                        <Text style={drawStyles.scaleValue}>\n                                            {draftSticker ? `${Math.round(draftSticker.scale * 100)}%` : 'Alege o imagine'}\n                                        </Text>\n                                        <TouchableOpacity\n                                            onPress={() => setDraftSticker((previous) => previous ? { ...previous, scale: clamp(previous.scale + 0.15, 0.4, 2.5) } : null)}\n                                            style={drawStyles.scaleButton}\n                                        >\n                                            <Text style={drawStyles.scaleButtonText}>Mai mare</Text>\n                                        </TouchableOpacity>\n                                    </View>\n                                    <Text style={drawStyles.sectionLabel}>Mutare sticker (X / Y)</Text>\n                                    <View style={drawStyles.stickerMovePad}>\n                                        <View style={drawStyles.stickerMoveRow}>\n                                            <View style={drawStyles.stickerMoveSpacer} />\n                                            <TouchableOpacity\n                                                onPress={() => nudgeDraftSticker(0, -0.03)}\n                                                style={drawStyles.moveButton}\n                                                disabled={!draftSticker}\n                                            >\n                                                <Text style={drawStyles.moveButtonText}>↑</Text>\n                                            </TouchableOpacity>\n                                            <View style={drawStyles.stickerMoveSpacer} />\n                                        </View>\n                                        <View style={drawStyles.stickerMoveRow}>\n                                            <TouchableOpacity\n                                                onPress={() => nudgeDraftSticker(-0.03, 0)}\n                                                style={drawStyles.moveButton}\n                                                disabled={!draftSticker}\n                                            >\n                                                <Text style={drawStyles.moveButtonText}>←</Text>\n                                            </TouchableOpacity>\n                                            <TouchableOpacity\n                                                onPress={() => nudgeDraftSticker(0, 0.03)}\n                                                style={drawStyles.moveButton}\n                                                disabled={!draftSticker}\n                                            >\n                                                <Text style={drawStyles.moveButtonText}>↓</Text>\n                                            </TouchableOpacity>\n                                            <TouchableOpacity\n                                                onPress={() => nudgeDraftSticker(0.03, 0)}\n                                                style={drawStyles.moveButton}\n                                                disabled={!draftSticker}\n                                            >\n                                                <Text style={drawStyles.moveButtonText}>→</Text>\n                                            </TouchableOpacity>\n                                        </View>\n                                    </View>\n                                    <Text style={drawStyles.stickerHint}>\n                                        Poti trage sticker-ul direct pe ecran sau il poti ajusta fin din sageti.\n                                    </Text>\n                                </>\n                            )}\n\n                            <View style={drawStyles.submitRow}>\n                                <TouchableOpacity onPress={submitChanges} style={drawStyles.primaryAction} disabled={isSaving}>\n                                    <Text style={drawStyles.primaryActionText}>{isSaving ? 'Se salveaza...' : 'Submit in AR'}</Text>\n                                </TouchableOpacity>\n                                <View style={drawStyles.syncBox}>\n                                    <Text style={drawStyles.syncTitle}>{getServerUrl() ? 'Server sync activ' : 'Doar salvare locala'}</Text>\n                                    <Text style={drawStyles.syncBody}>\n                                        {getServerUrl()\n                                            ? `Ultimul refresh: ${lastSync ? new Date(lastSync).toLocaleTimeString() : 'acum'}`\n                                            : 'Seteaza EXPO_PUBLIC_OVERRIDE_SERVER_URL pentru sincronizare intre dispozitive.'}\n                                    </Text>\n                                </View>\n                            </View>\n                        </ScrollView>\n                    </View>\n                </SafeAreaView>\n            </View>\n        </SafeAreaView>\n    );\n}\n\nconst drawStyles = StyleSheet.create({\n    bottomSheet: {\n        backgroundColor: 'rgba(2, 6, 23, 0.9)',\n        borderTopLeftRadius: 28,\n        borderTopRightRadius: 28,\n        marginTop: 'auto',\n        maxHeight: '44%',\n        overflow: 'hidden',\n    },\n    bottomSheetContent: {\n        alignItems: 'center',\n        gap: 16,\n        padding: 16,\n        paddingBottom: 32,\n    },\n    brushChip: {\n        alignItems: 'center',\n        backgroundColor: '#0f172a',\n        borderColor: '#1e293b',\n        borderRadius: 20,\n        borderWidth: 1,\n        height: 62,\n        justifyContent: 'center',\n        width: 62,\n    },\n    brushChipActive: {\n        borderColor: '#38bdf8',\n    },\n    brushRow: {\n        flexDirection: 'row',\n        gap: 12,\n    },\n    canvasStage: {\n        ...StyleSheet.absoluteFillObject,\n    },\n    canvasCard: {\n        backgroundColor: '#0f172a',\n        borderColor: 'rgba(148, 163, 184, 0.28)',\n        borderRadius: 24,\n        borderWidth: 1,\n        overflow: 'hidden',\n        position: 'relative',\n    },\n    colorSwatch: {\n        borderColor: 'rgba(255,255,255,0.15)',\n        borderRadius: 999,\n        borderWidth: 2,\n        height: 40,\n        width: 40,\n    },\n    colorSwatchActive: {\n        borderColor: '#f8fafc',\n        transform: [{ scale: 1.08 }],\n    },\n    floatingButton: {\n        backgroundColor: 'rgba(15, 23, 42, 0.88)',\n        borderColor: 'rgba(255,255,255,0.12)',\n        borderRadius: 999,\n        borderWidth: 1,\n        paddingHorizontal: 18,\n        paddingVertical: 10,\n    },\n    floatingButtonText: {\n        color: '#f8fafc',\n        fontSize: 13,\n        fontWeight: '700',\n        textTransform: 'uppercase',\n    },\n    invalidScreen: {\n        alignItems: 'center',\n        backgroundColor: '#020617',\n        flex: 1,\n        justifyContent: 'center',\n        padding: 24,\n    },\n    invalidTitle: {\n        color: '#f8fafc',\n        fontSize: 22,\n        fontWeight: '700',\n        marginBottom: 20,\n    },\n    loadingText: {\n        color: '#cbd5e1',\n        fontSize: 16,\n        marginTop: 12,\n    },\n    loadingWrapper: {\n        alignItems: 'center',\n        backgroundColor: '#020617',\n        flex: 1,\n        justifyContent: 'center',\n    },\n    modeChip: {\n        backgroundColor: '#0f172a',\n        borderColor: '#1e293b',\n        borderRadius: 999,\n        borderWidth: 1,\n        paddingHorizontal: 16,\n        paddingVertical: 10,\n    },\n    modeChipActive: {\n        backgroundColor: '#082f49',\n        borderColor: '#38bdf8',\n    },\n    modeChipText: {\n        color: '#cbd5e1',\n        fontSize: 13,\n        fontWeight: '700',\n    },\n    modeChipTextActive: {\n        color: '#e0f2fe',\n    },\n    paletteRow: {\n        flexDirection: 'row',\n        flexWrap: 'wrap',\n        gap: 12,\n        justifyContent: 'center',\n    },\n    posterPreviewImage: {\n        height: '100%',\n        opacity: 0.68,\n        width: '100%',\n    },\n    primaryAction: {\n        backgroundColor: '#2563eb',\n        borderRadius: 18,\n        paddingHorizontal: 20,\n        paddingVertical: 14,\n    },\n    primaryActionText: {\n        color: '#fff',\n        fontSize: 15,\n        fontWeight: '700',\n    },\n    scaleButton: {\n        backgroundColor: '#0f172a',\n        borderColor: '#1e293b',\n        borderRadius: 16,\n        borderWidth: 1,\n        paddingHorizontal: 16,\n        paddingVertical: 12,\n    },\n    scaleButtonText: {\n        color: '#e2e8f0',\n        fontSize: 13,\n        fontWeight: '700',\n    },\n    scaleValue: {\n        color: '#f8fafc',\n        fontSize: 15,\n        fontWeight: '700',\n        minWidth: 110,\n        textAlign: 'center',\n    },\n    moveButton: {\n        alignItems: 'center',\n        backgroundColor: '#0f172a',\n        borderColor: '#334155',\n        borderRadius: 16,\n        borderWidth: 1,\n        height: 46,\n        justifyContent: 'center',\n        minWidth: 62,\n        paddingHorizontal: 8,\n    },\n    moveButtonText: {\n        color: '#e2e8f0',\n        fontSize: 24,\n        fontWeight: '700',\n        lineHeight: 28,\n    },\n    sceneShade: {\n        ...StyleSheet.absoluteFillObject,\n        backgroundColor: 'rgba(2, 6, 23, 0.08)',\n    },\n    sceneWrapper: {\n        backgroundColor: '#000',\n        flex: 1,\n    },\n    screen: {\n        backgroundColor: '#020617',\n        flex: 1,\n    },\n    sectionLabel: {\n        alignSelf: 'flex-start',\n        color: '#94a3b8',\n        fontSize: 12,\n        fontWeight: '700',\n        letterSpacing: 1,\n        textTransform: 'uppercase',\n    },\n    statusBox: {\n        backgroundColor: 'rgba(8, 47, 73, 0.88)',\n        borderColor: 'rgba(125, 211, 252, 0.32)',\n        borderRadius: 18,\n        borderWidth: 1,\n        flex: 1,\n        marginLeft: 12,\n        paddingHorizontal: 14,\n        paddingVertical: 12,\n    },\n    statusHeadline: {\n        color: '#f8fafc',\n        fontSize: 15,\n        fontWeight: '700',\n        marginBottom: 4,\n    },\n    statusSubline: {\n        color: '#bae6fd',\n        fontSize: 12,\n        lineHeight: 18,\n    },\n    stickerHint: {\n        color: '#cbd5e1',\n        fontSize: 13,\n        lineHeight: 20,\n        textAlign: 'center',\n    },\n    stickerMovePad: {\n        alignItems: 'center',\n        gap: 8,\n        width: '100%',\n    },\n    stickerMoveRow: {\n        flexDirection: 'row',\n        gap: 10,\n        justifyContent: 'center',\n    },\n    stickerMoveSpacer: {\n        minWidth: 62,\n    },\n    stickerPreview: {\n        position: 'absolute',\n    },\n    stickerScaleRow: {\n        alignItems: 'center',\n        flexDirection: 'row',\n        gap: 12,\n        justifyContent: 'space-between',\n        width: '100%',\n    },\n    submitRow: {\n        gap: 12,\n        width: '100%',\n    },\n    syncBody: {\n        color: '#94a3b8',\n        fontSize: 12,\n        lineHeight: 18,\n    },\n    syncBox: {\n        backgroundColor: '#0f172a',\n        borderColor: '#1e293b',\n        borderRadius: 18,\n        borderWidth: 1,\n        padding: 14,\n    },\n    syncTitle: {\n        color: '#f8fafc',\n        fontSize: 13,\n        fontWeight: '700',\n        marginBottom: 4,\n    },\n    toolbarRow: {\n        flexDirection: 'row',\n        flexWrap: 'wrap',\n        gap: 10,\n        width: '100%',\n    },\n    topControls: {\n        alignItems: 'center',\n        flexDirection: 'row',\n        paddingHorizontal: 16,\n        paddingTop: 6,\n    },\n});\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/ItecOverride/app/drawScreen.tsx b/ItecOverride/app/drawScreen.tsx
+--- a/ItecOverride/app/drawScreen.tsx	(revision c354cc1e7d3c4f39a27531f5ef3941ef2745886c)
++++ b/ItecOverride/app/drawScreen.tsx	(date 1774707321659)
+@@ -175,7 +175,7 @@
+                     <View className="absolute top-12 left-4 right-4">
+                         <View className="flex-row items-center justify-between">
+                             <TouchableOpacity
+-                                onPress={() => router.replace('/scanner')}
++                                onPress={() => router.replace('/scanner' as any)}
+                                 className="bg-black/60 items-center justify-center rounded-2xl border border-white/20"
+                             >
+                                 <Text className="text-white text-md m-2">Back to scanner</Text>
+@@ -476,7 +476,7 @@
+         return (
+             <SafeAreaView style={drawStyles.invalidScreen}>
+                 <Text style={drawStyles.invalidTitle}>Poster invalid</Text>
+-                <TouchableOpacity onPress={() => router.replace('/scanner')} style={drawStyles.primaryAction}>
++                <TouchableOpacity onPress={() => router.replace('/scanner' as any)} style={drawStyles.primaryAction}>
+                     <Text style={drawStyles.primaryActionText}>Inapoi la scanner</Text>
+                 </TouchableOpacity>
+             </SafeAreaView>
+Index: ItecOverride/app/scanner.tsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import {\n    ViroARImageMarker,\n    ViroARScene,\n    ViroARSceneNavigator,\n    ViroText\n} from '@reactvision/react-viro';\nimport Constants from 'expo-constants';\nimport { CameraView, useCameraPermissions } from 'expo-camera';\nimport { useRouter } from 'expo-router';\nimport { useEffect, useRef, useState } from 'react';\nimport { Alert, InteractionManager, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';\nimport { SafeAreaView } from 'react-native-safe-area-context';\n\nimport type { PosterId } from './lib/ar-types';\nimport { POSTERS, POSTER_MAP } from './lib/posters';\nimport { ensureViroTargets } from './lib/viro-init';\n\nensureViroTargets();\n\nconst isExpoGo = Constants.executionEnvironment === 'storeClient';\n\nconst PosterARScene = (props: any) => {\n    const onPosterFound = props.arSceneNavigator.viroAppProps.onPosterFound as (posterId: PosterId) => void;\n\n    return (\n        <ViroARScene>\n            {POSTERS.map((poster) => (\n                <ViroARImageMarker\n                    key={poster.id}\n                    target={poster.target}\n                    onAnchorFound={() => onPosterFound(poster.id)}\n                >\n                    <ViroText\n                        text={poster.label}\n                        position={[0, 0.22, 0]}\n                        scale={[0.08, 0.08, 0.08]}\n                        style={styles.arLabel}\n                    />\n                </ViroARImageMarker>\n            ))}\n        </ViroARScene>\n    );\n};\n\n// eslint-disable-next-line @typescript-eslint/no-unused-vars\nfunction LegacyScannerScreen() {\n    const router = useRouter();\n    const [permission, requestPermission] = useCameraPermissions();\n    const hasFoundPoster = useRef(false);\n    const isMounted = true;\n\n    const handlePosterDetection = (posterName: string) => {\n        if (hasFoundPoster.current) return;\n        hasFoundPoster.current = true;\n\n        Alert.alert(\n            \"Target Acquired!\",\n            `Sistemul a detectat: ${posterName}. Inițiem modulul de desenare...`,\n            [\n                {\n                    text: \"Continuă\",\n                    onPress: () => {\n                        hasFoundPoster.current = false;\n                        router.push('/drawScreen');\n                    }\n                }\n            ],\n            { cancelable: false }\n        );\n    };\n\n    const handleEnableCamera = async () => {\n        if (permission && !permission.canAskAgain) {\n            try {\n                await Linking.openSettings();\n            } catch {\n                Alert.alert(\n                    \"Acțiune necesară\",\n                    \"Nu am putut deschide setările automat. Te rugăm să mergi manual la Setările telefonului -> Aplicații -> Caută aplicația și activează permisiunea pentru Cameră.\"\n                );\n            }\n        } else {\n            await requestPermission();\n        }\n    };\n\n    // English comment: Do not render ANYTHING heavy or check permissions until safely mounted\n    if (!isMounted || !permission) {\n        return <View style={{ flex: 1, backgroundColor: '#020617' }} />;\n    }\n\n    if (!permission.granted) {\n        return (\n            <SafeAreaView style={{ flex: 1, backgroundColor: '#020617' }}>\n                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 40 }}>\n                    <Text style={{ color: '#dbeafe', textAlign: 'center', fontSize: 18, marginBottom: 32 }}>\n                        We need your camera to detect the ITEC posters.\n                    </Text>\n                    <TouchableOpacity\n                        style={{ backgroundColor: '#2563eb', paddingHorizontal: 40, paddingVertical: 16, borderRadius: 12 }}\n                        onPress={handleEnableCamera}\n                    >\n                        <Text style={{ color: 'white', fontWeight: 'bold' }}>Enable Camera</Text>\n                    </TouchableOpacity>\n                </View>\n            </SafeAreaView>\n        );\n    }\n\n    return (\n        <View style={{ flex: 1, backgroundColor: 'black' }}>\n            <ViroARSceneNavigator\n                autofocus={true}\n                initialScene={{ scene: PosterARScene as any }}\n                style={StyleSheet.absoluteFill}\n                viroAppProps={{ onPosterFound: handlePosterDetection }}\n            />\n\n            <SafeAreaView style={StyleSheet.absoluteFill} pointerEvents=\"box-none\">\n                <View style={{ flex: 1, backgroundColor: 'rgba(23, 37, 84, 0.3)', padding: 32, justifyContent: 'space-between' }} pointerEvents=\"box-none\">\n                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>\n                        <TouchableOpacity\n                            onPress={() => router.push('/')}\n                            style={{ backgroundColor: 'rgba(0,0,0,0.6)', padding: 12, paddingHorizontal: 20, borderRadius: 999, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}\n                        >\n                            <Text style={{ color: 'white', fontWeight: 'bold', textTransform: 'uppercase' }}>Back</Text>\n                        </TouchableOpacity>\n                    </View>\n\n                    <View style={{ alignItems: 'center', justifyContent: 'center' }} pointerEvents=\"none\">\n                        <View style={{ width: 288, height: 384, borderWidth: 1, borderColor: 'rgba(96, 165, 250, 0.3)', borderRadius: 24, position: 'relative' }}>\n                            <View style={{ position: 'absolute', top: -2, left: -2, width: 48, height: 48, borderTopWidth: 4, borderLeftWidth: 4, borderColor: '#60a5fa', borderTopLeftRadius: 24 }} />\n                            <View style={{ position: 'absolute', top: -2, right: -2, width: 48, height: 48, borderTopWidth: 4, borderRightWidth: 4, borderColor: '#60a5fa', borderTopRightRadius: 24 }} />\n                            <View style={{ position: 'absolute', bottom: -2, left: -2, width: 48, height: 48, borderBottomWidth: 4, borderLeftWidth: 4, borderColor: '#60a5fa', borderBottomLeftRadius: 24 }} />\n                            <View style={{ position: 'absolute', bottom: -2, right: -2, width: 48, height: 48, borderBottomWidth: 4, borderRightWidth: 4, borderColor: '#60a5fa', borderBottomRightRadius: 24 }} />\n                            <View style={{ width: '100%', height: 2, backgroundColor: 'rgba(96, 165, 250, 0.6)', marginTop: 128 }} />\n                        </View>\n                        <Text style={{ color: '#93c5fd', marginTop: 32, fontWeight: 'bold', letterSpacing: 4, textAlign: 'center', fontSize: 12, textTransform: 'uppercase' }}>\n                            Targeting Poster...\n                        </Text>\n                    </View>\n\n                    <View style={{ marginBottom: 40, alignItems: 'center' }}>\n                        <TouchableOpacity\n                            onPress={() => handlePosterDetection(\"Manual Override Poster\")}\n                            style={{ backgroundColor: 'rgba(37, 99, 235, 0.2)', borderWidth: 1, borderColor: 'rgba(96, 165, 250, 0.5)', paddingHorizontal: 40, paddingVertical: 16, borderRadius: 999 }}\n                        >\n                            <Text style={{ color: '#dbeafe', fontWeight: '900', letterSpacing: 2, fontSize: 12, textTransform: 'uppercase' }}>\n                                Simulate Detection\n                            </Text>\n                        </TouchableOpacity>\n                    </View>\n                </View>\n            </SafeAreaView >\n        </View >\n    );\n}\n\nexport default function ScannerScreen() {\n    const router = useRouter();\n    const [permission, requestPermission] = useCameraPermissions();\n    const [isTransitioning, setIsTransitioning] = useState(false);\n    const isNavigatingRef = useRef(false);\n    const transitionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);\n\n    useEffect(() => () => {\n        if (transitionTimerRef.current) {\n            clearTimeout(transitionTimerRef.current);\n        }\n    }, []);\n\n    const openPoster = (posterId: PosterId) => {\n        if (isNavigatingRef.current) return;\n\n        isNavigatingRef.current = true;\n        setIsTransitioning(true);\n\n        if (transitionTimerRef.current) {\n            clearTimeout(transitionTimerRef.current);\n        }\n\n        transitionTimerRef.current = setTimeout(() => {\n            InteractionManager.runAfterInteractions(() => {\n                router.replace({\n                    pathname: '/drawScreen',\n                    params: { posterId },\n                });\n            });\n        }, 320);\n    };\n\n    if (!permission) {\n        return <View style={styles.loadingScreen} />;\n    }\n\n    if (!permission.granted) {\n        return (\n            <SafeAreaView style={styles.permissionScreen}>\n                <View style={styles.permissionCard}>\n                    <Text style={styles.permissionTitle}>Camera este necesara pentru scanarea posterelor.</Text>\n                    <Text style={styles.permissionBody}>\n                        Dupa accept, build-ul nativ poate detecta automat imaginile din `assets/posters`.\n                    </Text>\n                    <TouchableOpacity onPress={requestPermission} style={styles.primaryButton}>\n                        <Text style={styles.primaryButtonText}>Permite camera</Text>\n                    </TouchableOpacity>\n                </View>\n            </SafeAreaView>\n        );\n    }\n\n    return (\n        <View style={styles.container}>\n            {isExpoGo ? (\n                <CameraView facing=\"back\" style={StyleSheet.absoluteFill} />\n            ) : isTransitioning ? (\n                <View style={[StyleSheet.absoluteFill, styles.transitionBackdrop]} />\n            ) : (\n                <ViroARSceneNavigator\n                    autofocus\n                    initialScene={{ scene: PosterARScene as any }}\n                    viroAppProps={{ onPosterFound: openPoster }}\n                    style={StyleSheet.absoluteFill}\n                />\n            )}\n\n            <SafeAreaView style={StyleSheet.absoluteFill} pointerEvents=\"box-none\">\n                <View style={styles.overlay} pointerEvents=\"box-none\">\n                    <View style={styles.topBar}>\n                        <TouchableOpacity onPress={() => router.replace('/')} style={styles.secondaryButton}>\n                            <Text style={styles.secondaryButtonText}>Back</Text>\n                        </TouchableOpacity>\n                        <View style={styles.statusPill}>\n                            <Text style={styles.statusPillText}>{isExpoGo ? 'Expo Go Preview' : 'AR Scan Live'}</Text>\n                        </View>\n                    </View>\n\n                    <View style={styles.scanFrameWrapper} pointerEvents=\"none\">\n                        <View style={styles.scanFrame}>\n                            <View style={[styles.frameCorner, styles.topLeft]} />\n                            <View style={[styles.frameCorner, styles.topRight]} />\n                            <View style={[styles.frameCorner, styles.bottomLeft]} />\n                            <View style={[styles.frameCorner, styles.bottomRight]} />\n                            <View style={styles.scanLine} />\n                        </View>\n                        <Text style={styles.scanHint}>\n                            {isExpoGo\n                                ? 'Expo Go afiseaza preview-ul camerei. Pentru detectie AR automata foloseste npx expo run:android.'\n                                : 'Tine posterul in cadru pana este detectat automat.'}\n                        </Text>\n                    </View>\n\n                    <View style={styles.posterChooser}>\n                        <Text style={styles.posterChooserTitle}>Alege manual posterul</Text>\n                        <Text style={styles.posterChooserSubtitle}>\n                            Fallback-ul ramane disponibil daca marker-ul nu este prins imediat.\n                        </Text>\n                        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.posterList}>\n                            {POSTERS.map((poster) => (\n                                <TouchableOpacity\n                                    key={poster.id}\n                                    onPress={() => openPoster(poster.id)}\n                                    style={styles.posterChip}\n                                >\n                                    <Text style={styles.posterChipLabel}>{POSTER_MAP[poster.id].label}</Text>\n                                </TouchableOpacity>\n                            ))}\n                        </ScrollView>\n                    </View>\n                </View>\n            </SafeAreaView>\n        </View>\n    );\n}\n\nconst styles = StyleSheet.create({\n    arLabel: {\n        color: '#f8fafc',\n        fontFamily: 'Arial',\n        fontSize: 20,\n        textAlign: 'center',\n        textAlignVertical: 'center',\n    },\n    bottomLeft: {\n        borderBottomLeftRadius: 24,\n        borderBottomWidth: 4,\n        borderLeftWidth: 4,\n        bottom: -2,\n        left: -2,\n    },\n    bottomRight: {\n        borderBottomRightRadius: 24,\n        borderBottomWidth: 4,\n        borderRightWidth: 4,\n        bottom: -2,\n        right: -2,\n    },\n    container: {\n        backgroundColor: '#020617',\n        flex: 1,\n    },\n    frameCorner: {\n        borderColor: '#38bdf8',\n        height: 48,\n        position: 'absolute',\n        width: 48,\n    },\n    loadingScreen: {\n        backgroundColor: '#020617',\n        flex: 1,\n    },\n    overlay: {\n        backgroundColor: 'rgba(2, 6, 23, 0.22)',\n        flex: 1,\n        justifyContent: 'space-between',\n        padding: 20,\n    },\n    permissionBody: {\n        color: '#cbd5e1',\n        fontSize: 15,\n        lineHeight: 22,\n        marginBottom: 24,\n        textAlign: 'center',\n    },\n    permissionCard: {\n        alignItems: 'center',\n        backgroundColor: '#0f172a',\n        borderColor: '#1e293b',\n        borderRadius: 28,\n        borderWidth: 1,\n        marginHorizontal: 20,\n        padding: 24,\n    },\n    permissionScreen: {\n        backgroundColor: '#020617',\n        flex: 1,\n        justifyContent: 'center',\n    },\n    permissionTitle: {\n        color: '#f8fafc',\n        fontSize: 22,\n        fontWeight: '700',\n        marginBottom: 12,\n        textAlign: 'center',\n    },\n    posterChip: {\n        backgroundColor: 'rgba(15, 23, 42, 0.92)',\n        borderColor: 'rgba(125, 211, 252, 0.35)',\n        borderRadius: 999,\n        borderWidth: 1,\n        paddingHorizontal: 18,\n        paddingVertical: 12,\n    },\n    posterChipLabel: {\n        color: '#e0f2fe',\n        fontSize: 13,\n        fontWeight: '700',\n    },\n    posterChooser: {\n        backgroundColor: 'rgba(2, 6, 23, 0.82)',\n        borderColor: 'rgba(125, 211, 252, 0.18)',\n        borderRadius: 28,\n        borderWidth: 1,\n        padding: 18,\n    },\n    posterChooserSubtitle: {\n        color: '#94a3b8',\n        fontSize: 13,\n        lineHeight: 19,\n        marginBottom: 14,\n    },\n    posterChooserTitle: {\n        color: '#f8fafc',\n        fontSize: 18,\n        fontWeight: '700',\n        marginBottom: 6,\n    },\n    posterList: {\n        gap: 12,\n        paddingRight: 20,\n    },\n    primaryButton: {\n        backgroundColor: '#2563eb',\n        borderRadius: 18,\n        paddingHorizontal: 24,\n        paddingVertical: 14,\n    },\n    primaryButtonText: {\n        color: '#fff',\n        fontSize: 16,\n        fontWeight: '700',\n    },\n    scanFrame: {\n        borderColor: 'rgba(125, 211, 252, 0.32)',\n        borderRadius: 28,\n        borderWidth: 1,\n        height: 420,\n        overflow: 'hidden',\n        position: 'relative',\n        width: 290,\n    },\n    scanFrameWrapper: {\n        alignItems: 'center',\n    },\n    scanHint: {\n        color: '#e0f2fe',\n        fontSize: 13,\n        fontWeight: '600',\n        lineHeight: 20,\n        marginTop: 20,\n        maxWidth: 310,\n        textAlign: 'center',\n    },\n    scanLine: {\n        backgroundColor: 'rgba(56, 189, 248, 0.7)',\n        height: 2,\n        marginTop: 160,\n        width: '100%',\n    },\n    secondaryButton: {\n        backgroundColor: 'rgba(15, 23, 42, 0.82)',\n        borderColor: 'rgba(255,255,255,0.1)',\n        borderRadius: 999,\n        borderWidth: 1,\n        paddingHorizontal: 18,\n        paddingVertical: 10,\n    },\n    secondaryButtonText: {\n        color: '#f8fafc',\n        fontSize: 13,\n        fontWeight: '700',\n        textTransform: 'uppercase',\n    },\n    statusPill: {\n        backgroundColor: 'rgba(8, 47, 73, 0.92)',\n        borderColor: 'rgba(125, 211, 252, 0.28)',\n        borderRadius: 999,\n        borderWidth: 1,\n        paddingHorizontal: 14,\n        paddingVertical: 10,\n    },\n    statusPillText: {\n        color: '#bae6fd',\n        fontSize: 12,\n        fontWeight: '700',\n        textTransform: 'uppercase',\n    },\n    topBar: {\n        alignItems: 'center',\n        flexDirection: 'row',\n        justifyContent: 'space-between',\n    },\n    topLeft: {\n        borderLeftWidth: 4,\n        borderTopLeftRadius: 24,\n        borderTopWidth: 4,\n        left: -2,\n        top: -2,\n    },\n    topRight: {\n        borderRightWidth: 4,\n        borderTopRightRadius: 24,\n        borderTopWidth: 4,\n        right: -2,\n        top: -2,\n    },\n    transitionBackdrop: {\n        backgroundColor: '#000',\n    },\n});\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/ItecOverride/app/scanner.tsx b/ItecOverride/app/scanner.tsx
+--- a/ItecOverride/app/scanner.tsx	(revision c354cc1e7d3c4f39a27531f5ef3941ef2745886c)
++++ b/ItecOverride/app/scanner.tsx	(date 1774707321651)
+@@ -61,7 +61,7 @@
+                     text: "Continuă",
+                     onPress: () => {
+                         hasFoundPoster.current = false;
+-                        router.push('/drawScreen');
++                        router.push('/drawScreen' as any);
+                     }
+                 }
+             ],
+@@ -182,7 +182,7 @@
+         transitionTimerRef.current = setTimeout(() => {
+             InteractionManager.runAfterInteractions(() => {
+                 router.replace({
+-                    pathname: '/drawScreen',
++                    pathname: '/drawScreen' as any,
+                     params: { posterId },
+                 });
+             });
+Index: ItecOverride/app/index.tsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import { useRouter } from \"expo-router\";\nimport { Image, Text, TouchableOpacity, View } from 'react-native';\nimport { SafeAreaView } from 'react-native-safe-area-context';\nexport default function HomeScreen() {\n    const router = useRouter();\n    return (\n        <SafeAreaView className=\"flex-1 bg-[#020617]\">\n            {/* Background with a subtle dark blue tint */}\n            <View className=\"flex-1 px-8 justify-center items-center\">\n\n                {/* Logo Section */}\n                <View className=\"items-center mb-16\">\n                    <Image source={require('../assets/images/itec.png')} className=\"w-60 h-60\" />\n                    <Text className=\"text-blue-100 text-5xl font-black tracking-tighter\">\n                        OVERRIDE\n                    </Text>\n                    <View className=\"h-1 w-20 bg-blue-500 mt-2 rounded-full\" />\n                </View>\n\n                {/* Info Card */}\n                <View className=\"bg-blue-900/20 p-6 rounded-3xl border border-blue-800/50 mb-12\">\n                    <Text className=\"text-blue-200 text-center text-base leading-6\">\n                        Scan physical posters to unlock the digital canvas.\n                        Draw together in real-time.\n                    </Text>\n                </View>\n\n                {/* Primary Action */}\n                <TouchableOpacity\n                    activeOpacity={0.8}\n                    onPress={() => router.push('/scanner')}\n                    className=\"bg-blue-600 w-full py-5 rounded-2xl shadow-xl shadow-blue-900 border border-blue-400\"\n                >\n                    <Text className=\"text-white text-center text-xl font-bold uppercase tracking-widest\">\n                        Enter Override\n                    </Text>\n                </TouchableOpacity>\n\n            </View>\n        </SafeAreaView>\n    );\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/ItecOverride/app/index.tsx b/ItecOverride/app/index.tsx
+--- a/ItecOverride/app/index.tsx	(revision c354cc1e7d3c4f39a27531f5ef3941ef2745886c)
++++ b/ItecOverride/app/index.tsx	(date 1774707321644)
+@@ -28,7 +28,7 @@
+                 {/* Primary Action */}
+                 <TouchableOpacity
+                     activeOpacity={0.8}
+-                    onPress={() => router.push('/scanner')}
++                    onPress={() => router.push('/scanner' as any)}
+                     className="bg-blue-600 w-full py-5 rounded-2xl shadow-xl shadow-blue-900 border border-blue-400"
+                 >
+                     <Text className="text-white text-center text-xl font-bold uppercase tracking-widest">
+Index: ItecOverride/app/fight.tsx
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import React, { useState, useEffect, useRef } from 'react';\nimport { StyleSheet, Text, View, Button, Dimensions, Alert } from 'react-native';\nimport { CameraView, useCameraPermissions } from 'expo-camera';\nimport Svg, { Path } from 'react-native-svg';\nimport { useRouter } from 'expo-router';\n\n// Importăm clientul de socket\nimport { io } from \"socket.io-client\";\n\n// ==========================================\n// CONFIGURARE CRITICĂ: PUNE IP-UL TĂU AICI!\n// Nu folosi 'localhost', telefoanele nu îl văd.\n// ==========================================\nconst LAPTOP_IP = \"LAPTOP_IP\"; // Ex: \"192.168.1.15\"\nconst SERVER_URL = `http://${LAPTOP_IP}:3000`;\n\n\ntype Point = { x: number; y: number };\ntype Line = { points: Point[]; color: string; id: string }; // Adăugăm ID unic\n\nconst { width, height } = Dimensions.get('window');\n\nexport default function FightScreen() {\n    const [permission, requestPermission] = useCameraPermissions();\n    const [lines, setLines] = useState<Line[]>([]);\n    const [currentLine, setCurrentLine] = useState<Point[]>([]);\n    const [strokeColor, setStrokeColor] = useState(\"#39ff14\"); // Verde neon\n    const [connected, setConnected] = useState(false);\n    const router = useRouter();\n\n    // Folosim useRef pentru socket ca să nu se re-creeze la fiecare randare\n    const socketRef = useRef<any>(null);\n\n    // 1. Efectul pentru gestionarea conexiunii WebSocket\n    useEffect(() => {\n        console.log(`Încercăm conectarea la server: ${SERVER_URL}`);\n\n        // Creăm conexiunea\n        socketRef.current = io(SERVER_URL, {\n            transports: ['websocket'], // Forțăm WebSocket pentru viteză\n        });\n\n        // Ascultăm evenimentele\n        socketRef.current.on('connect', () => {\n            console.log('Conectat la serverul iTEC!');\n            setConnected(true);\n        });\n\n        socketRef.current.on('connect_error', (err: any) => {\n            console.log('Eroare conexiune server:', err.message);\n            setConnected(false);\n        });\n\n        // Când ne conectăm prima dată, primim istoricul\n        socketRef.current.on('initHistory', (history: Line[]) => {\n            console.log(`Am primit ${history.length} linii de istoric.`);\n            setLines(history);\n        });\n\n        // Când cineva trimite o linie nouă în timp real\n        socketRef.current.on('newLine', (newLine: Line) => {\n            console.log('Am primit o linie nouă prin broadcast!');\n            setLines((prev) => [...prev, newLine]);\n        });\n\n        // Când cineva șterge tot\n        socketRef.current.on('clearCanvas', () => {\n            setLines([]);\n        });\n\n        // Curățarea conexiunii când închidem aplicația\n        return () => {\n            if (socketRef.current) socketRef.current.disconnect();\n        };\n    }, []);\n\n    // 2. Verificăm permisiunile pentru cameră\n    if (!permission || !permission.granted) {\n        return (\n            <View style={styles.container}>\n                <Text style={{color: 'white', textAlign: 'center', marginBottom: 20}}>Avem nevoie de cameră.</Text>\n                <Button onPress={requestPermission} title=\"Permite camera\" />\n            </View>\n        );\n    }\n\n    // 3. Funcții pentru a capta desenul cu degetul\n    const handleTouchStart = (event: any) => {\n        const { locationX, locationY } = event.nativeEvent;\n        setCurrentLine([{ x: locationX, y: locationY }]);\n    };\n\n    const handleTouchMove = (event: any) => {\n        const { locationX, locationY } = event.nativeEvent;\n        setCurrentLine((prev) => [...prev, { x: locationX, y: locationY }]);\n    };\n\n    const handleTouchEnd = () => {\n        if (currentLine.length > 1) { // Minim 2 puncte pentru o linie\n            const newLine: Line = {\n                points: currentLine,\n                color: strokeColor,\n                id: `${socketRef.current?.id}_${Date.now()}` // ID unic bazat pe socket și timp\n            };\n\n            // Adăugăm local\n            setLines((prev) => [...prev, newLine]);\n\n            // TRMITEM LINIA LA SERVER ÎN TIMP REAL!\n            if (socketRef.current && connected) {\n                socketRef.current.emit('sendLine', newLine);\n                console.log('Linie trimisă la server.');\n            }\n\n            setCurrentLine([]); // Resetăm linia curentă\n        }\n    };\n\n    // Funcția pentru ștergere sincronizată\n    const requestClearAll = () => {\n        if (socketRef.current && connected) {\n            socketRef.current.emit('requestClear');\n        }\n    };\n\n    // Transformăm array-ul de puncte într-un format înțeles de SVG\n    const createSvgPath = (points: Point[]) => {\n        if (points.length === 0) return '';\n        const path = points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x} ${p.y}`);\n        return path.join(' ');\n    };\n\n    return (\n        <View style={styles.container}>\n            {/* Stratul 1: Camera care vede lumea reală */}\n            <CameraView style={StyleSheet.absoluteFill} facing=\"back\" />\n\n            {/* Stratul 2: Canvas-ul invizibil pe care desenăm */}\n            <View\n                style={StyleSheet.absoluteFill}\n                onTouchStart={handleTouchStart}\n                onTouchMove={handleTouchMove}\n                onTouchEnd={handleTouchEnd}\n            >\n                <Svg width={width} height={height}>\n                    {/* Desenăm liniile deja finalizate (locale + primite) */}\n                    {lines.map((line) => (\n                        <Path\n                            key={line.id}\n                            d={createSvgPath(line.points)}\n                            stroke={line.color}\n                            strokeWidth={8}\n                            strokeLinecap=\"round\"\n                            strokeLinejoin=\"round\"\n                            fill=\"none\"\n                        />\n                    ))}\n\n                    {/* Desenăm linia care este în curs de creare locală (live) */}\n                    {currentLine.length > 0 && (\n                        <Path\n                            d={createSvgPath(currentLine)}\n                            stroke={strokeColor}\n                            strokeWidth={8}\n                            strokeLinecap=\"round\"\n                            strokeLinejoin=\"round\"\n                            fill=\"none\"\n                        />\n                    )}\n                </Svg>\n            </View>\n\n            {/* UI pentru debugging și culori */}\n            <View style={styles.uiContainer}>\n                <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>\n                    {/* Indicator de conexiune */}\n                    <View style={[styles.statusDot, {backgroundColor: connected ? '#39ff14' : 'red'}]} />\n                    <Text style={styles.title}>SYNC MODE</Text>\n                </View>\n\n                <View style={styles.palette}>\n                    {['#39ff14', '#ff003c', '#00f0ff', '#ffffff'].map((color) => (\n                        <View\n                            key={color}\n                            onTouchStart={() => setStrokeColor(color)}\n                            style={[\n                                styles.colorCircle,\n                                { backgroundColor: color, borderWidth: strokeColor === color ? 3 : 0 }\n                            ]}\n                        />\n                    ))}\n                </View>\n                <Button title=\"Ieși\" onPress={() => router.back()} color=\"#ff003c\" />\n                <Button title=\"Șterge Tot\" onPress={requestClearAll} color=\"#444\" />\n            </View>\n        </View>\n    );\n}\n\nconst styles = StyleSheet.create({\n    container: {\n        flex: 1,\n        backgroundColor: '#000',\n    },\n    uiContainer: {\n        position: 'absolute',\n        bottom: 30,\n        left: 10,\n        right: 10,\n        backgroundColor: 'rgba(0,0,0,0.7)',\n        padding: 15,\n        borderRadius: 15,\n        gap: 10,\n    },\n    palette: {\n        flexDirection: 'row',\n        justifyContent: 'center',\n        gap: 10,\n        marginVertical: 5,\n    },\n    colorCircle: {\n        width: 35,\n        height: 35,\n        borderRadius: 18,\n        borderColor: '#fff',\n    },\n    title: {\n        color: 'white',\n        fontWeight: 'bold',\n        fontSize: 14,\n    },\n    statusDot: {\n        width: 10,\n        height: 10,\n        borderRadius: 5,\n    }\n});
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/ItecOverride/app/fight.tsx b/ItecOverride/app/fight.tsx
+--- a/ItecOverride/app/fight.tsx	(revision c354cc1e7d3c4f39a27531f5ef3941ef2745886c)
++++ b/ItecOverride/app/fight.tsx	(date 1774707156749)
+@@ -1,80 +1,73 @@
+ import React, { useState, useEffect, useRef } from 'react';
+-import { StyleSheet, Text, View, Button, Dimensions, Alert } from 'react-native';
++import {StyleSheet, Text, View, Button, Dimensions, TouchableOpacity} from 'react-native';
+ import { CameraView, useCameraPermissions } from 'expo-camera';
+ import Svg, { Path } from 'react-native-svg';
+-import { useRouter } from 'expo-router';
+-
+-// Importăm clientul de socket
++// Importăm uneltele de rute pentru a prinde codul și a ne întoarce
++import { useRouter, useLocalSearchParams } from 'expo-router';
+ import { io } from "socket.io-client";
+ 
+ // ==========================================
+-// CONFIGURARE CRITICĂ: PUNE IP-UL TĂU AICI!
+-// Nu folosi 'localhost', telefoanele nu îl văd.
++// PUNE IP-UL TĂU AICI (ca și până acum)
+ // ==========================================
+-const LAPTOP_IP = "LAPTOP_IP"; // Ex: "192.168.1.15"
++const LAPTOP_IP = "ADRESA_TA_DE_IP_AICI";
+ const SERVER_URL = `http://${LAPTOP_IP}:3000`;
+ 
+-
+ type Point = { x: number; y: number };
+-type Line = { points: Point[]; color: string; id: string }; // Adăugăm ID unic
++type Line = { points: Point[]; color: string; id: string };
+ 
+ const { width, height } = Dimensions.get('window');
+ 
+ export default function FightScreen() {
++    const router = useRouter();
++    // Prindem parametrul 'room' trimis de pe ecranul Home
++    const { room } = useLocalSearchParams();
++
+     const [permission, requestPermission] = useCameraPermissions();
+     const [lines, setLines] = useState<Line[]>([]);
+     const [currentLine, setCurrentLine] = useState<Point[]>([]);
+-    const [strokeColor, setStrokeColor] = useState("#39ff14"); // Verde neon
++    const [strokeColor, setStrokeColor] = useState("#39ff14");
+     const [connected, setConnected] = useState(false);
+-    const router = useRouter();
+ 
+-    // Folosim useRef pentru socket ca să nu se re-creeze la fiecare randare
+     const socketRef = useRef<any>(null);
+ 
+-    // 1. Efectul pentru gestionarea conexiunii WebSocket
+     useEffect(() => {
+-        console.log(`Încercăm conectarea la server: ${SERVER_URL}`);
++        // Ne asigurăm că avem un cod de cameră înainte să ne conectăm
++        if (!room) return;
+ 
+-        // Creăm conexiunea
++        console.log(`Ne conectăm la server pentru afișul: ${room}`);
++
+         socketRef.current = io(SERVER_URL, {
+-            transports: ['websocket'], // Forțăm WebSocket pentru viteză
++            transports: ['websocket'],
+         });
+ 
+-        // Ascultăm evenimentele
+         socketRef.current.on('connect', () => {
+-            console.log('Conectat la serverul iTEC!');
++            console.log('Conectat! Cerem acces în camera:', room);
+             setConnected(true);
+-        });
+ 
+-        socketRef.current.on('connect_error', (err: any) => {
+-            console.log('Eroare conexiune server:', err.message);
+-            setConnected(false);
++            // 1. Spunem serverului în ce cameră/afiș vrem să intrăm
++            socketRef.current.emit('joinRoom', room);
+         });
+ 
+-        // Când ne conectăm prima dată, primim istoricul
++        // 2. Primim istoricul DOAR pentru acest afiș
+         socketRef.current.on('initHistory', (history: Line[]) => {
+-            console.log(`Am primit ${history.length} linii de istoric.`);
+-            setLines(history);
++            setLines(history || []); // history poate fi undefined dacă e cameră nouă
+         });
+ 
+-        // Când cineva trimite o linie nouă în timp real
++        // 3. Primim o linie nouă (doar de la cei din aceeași cameră)
+         socketRef.current.on('newLine', (newLine: Line) => {
+-            console.log('Am primit o linie nouă prin broadcast!');
+             setLines((prev) => [...prev, newLine]);
+         });
+ 
+-        // Când cineva șterge tot
++        // 4. Ștergerea canvasului (doar pentru acest afiș)
+         socketRef.current.on('clearCanvas', () => {
+             setLines([]);
+         });
+ 
+-        // Curățarea conexiunii când închidem aplicația
+         return () => {
+             if (socketRef.current) socketRef.current.disconnect();
+         };
+-    }, []);
++    }, [room]); // Re-rulăm efectul dacă se schimbă camera
+ 
+-    // 2. Verificăm permisiunile pentru cameră
+     if (!permission || !permission.granted) {
+         return (
+             <View style={styles.container}>
+@@ -84,7 +77,6 @@
+         );
+     }
+ 
+-    // 3. Funcții pentru a capta desenul cu degetul
+     const handleTouchStart = (event: any) => {
+         const { locationX, locationY } = event.nativeEvent;
+         setCurrentLine([{ x: locationX, y: locationY }]);
+@@ -96,46 +88,40 @@
+     };
+ 
+     const handleTouchEnd = () => {
+-        if (currentLine.length > 1) { // Minim 2 puncte pentru o linie
++        if (currentLine.length > 1) {
+             const newLine: Line = {
+                 points: currentLine,
+                 color: strokeColor,
+-                id: `${socketRef.current?.id}_${Date.now()}` // ID unic bazat pe socket și timp
++                id: `${socketRef.current?.id}_${Date.now()}`
+             };
+ 
+-            // Adăugăm local
+             setLines((prev) => [...prev, newLine]);
+ 
+-            // TRMITEM LINIA LA SERVER ÎN TIMP REAL!
++            // Modificare AICI: Trimitem linia ȘI codul camerei
+             if (socketRef.current && connected) {
+-                socketRef.current.emit('sendLine', newLine);
+-                console.log('Linie trimisă la server.');
++                socketRef.current.emit('sendLine', { line: newLine, roomId: room });
+             }
+ 
+-            setCurrentLine([]); // Resetăm linia curentă
++            setCurrentLine([]);
+         }
+     };
+ 
+-    // Funcția pentru ștergere sincronizată
+     const requestClearAll = () => {
++        // Modificare AICI: Spunem serverului ce cameră să șteargă
+         if (socketRef.current && connected) {
+-            socketRef.current.emit('requestClear');
++            socketRef.current.emit('requestClear', room);
+         }
+     };
+ 
+-    // Transformăm array-ul de puncte într-un format înțeles de SVG
+     const createSvgPath = (points: Point[]) => {
+         if (points.length === 0) return '';
+-        const path = points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x} ${p.y}`);
+-        return path.join(' ');
++        return points.map((p, index) => `${index === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+     };
+ 
+     return (
+         <View style={styles.container}>
+-            {/* Stratul 1: Camera care vede lumea reală */}
+             <CameraView style={StyleSheet.absoluteFill} facing="back" />
+ 
+-            {/* Stratul 2: Canvas-ul invizibil pe care desenăm */}
+             <View
+                 style={StyleSheet.absoluteFill}
+                 onTouchStart={handleTouchStart}
+@@ -143,39 +129,30 @@
+                 onTouchEnd={handleTouchEnd}
+             >
+                 <Svg width={width} height={height}>
+-                    {/* Desenăm liniile deja finalizate (locale + primite) */}
+                     {lines.map((line) => (
+-                        <Path
+-                            key={line.id}
+-                            d={createSvgPath(line.points)}
+-                            stroke={line.color}
+-                            strokeWidth={8}
+-                            strokeLinecap="round"
+-                            strokeLinejoin="round"
+-                            fill="none"
+-                        />
++                        <Path key={line.id} d={createSvgPath(line.points)} stroke={line.color} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                     ))}
+-
+-                    {/* Desenăm linia care este în curs de creare locală (live) */}
+                     {currentLine.length > 0 && (
+-                        <Path
+-                            d={createSvgPath(currentLine)}
+-                            stroke={strokeColor}
+-                            strokeWidth={8}
+-                            strokeLinecap="round"
+-                            strokeLinejoin="round"
+-                            fill="none"
+-                        />
++                        <Path d={createSvgPath(currentLine)} stroke={strokeColor} strokeWidth={8} strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                     )}
+                 </Svg>
+             </View>
+ 
+-            {/* UI pentru debugging și culori */}
++            {/* Bara de Sus: Arătăm codul Afișului */}
++            <View style={styles.topBar}>
++                <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
++                    <Text style={styles.backBtnText}>◀ RETRAGERE</Text>
++                </TouchableOpacity>
++                <View style={styles.roomBadge}>
++                    <Text style={styles.roomBadgeText}>AFIȘ: {room}</Text>
++                </View>
++            </View>
++
++            {/* Bara de Jos: UI pentru culori */}
+             <View style={styles.uiContainer}>
+                 <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+-                    {/* Indicator de conexiune */}
+                     <View style={[styles.statusDot, {backgroundColor: connected ? '#39ff14' : 'red'}]} />
+-                    <Text style={styles.title}>SYNC MODE</Text>
++                    <Text style={styles.title}>SYNC</Text>
+                 </View>
+ 
+                 <View style={styles.palette}>
+@@ -183,55 +160,43 @@
+                         <View
+                             key={color}
+                             onTouchStart={() => setStrokeColor(color)}
+-                            style={[
+-                                styles.colorCircle,
+-                                { backgroundColor: color, borderWidth: strokeColor === color ? 3 : 0 }
+-                            ]}
++                            style={[styles.colorCircle, { backgroundColor: color, borderWidth: strokeColor === color ? 3 : 0 }]}
+                         />
+                     ))}
+                 </View>
+-                <Button title="Ieși" onPress={() => router.back()} color="#ff003c" />
+-                <Button title="Șterge Tot" onPress={requestClearAll} color="#444" />
++
++                <TouchableOpacity onPress={requestClearAll} style={styles.clearBtn}>
++                    <Text style={styles.clearBtnText}>BOMB</Text>
++                </TouchableOpacity>
+             </View>
+         </View>
+     );
+ }
+ 
+ const styles = StyleSheet.create({
+-    container: {
+-        flex: 1,
+-        backgroundColor: '#000',
+-    },
+-    uiContainer: {
++    container: { flex: 1, backgroundColor: '#000' },
++
++    // Stiluri pentru bara de sus
++    topBar: {
+         position: 'absolute',
+-        bottom: 30,
+-        left: 10,
+-        right: 10,
+-        backgroundColor: 'rgba(0,0,0,0.7)',
+-        padding: 15,
+-        borderRadius: 15,
+-        gap: 10,
+-    },
+-    palette: {
++        top: 50, // Lăsăm loc pentru notch-ul telefoanelor
++        left: 20,
++        right: 20,
+         flexDirection: 'row',
+-        justifyContent: 'center',
+-        gap: 10,
+-        marginVertical: 5,
+-    },
+-    colorCircle: {
+-        width: 35,
+-        height: 35,
+-        borderRadius: 18,
+-        borderColor: '#fff',
++        justifyContent: 'space-between',
++        alignItems: 'center',
+     },
+-    title: {
+-        color: 'white',
+-        fontWeight: 'bold',
+-        fontSize: 14,
+-    },
+-    statusDot: {
+-        width: 10,
+-        height: 10,
+-        borderRadius: 5,
+-    }
++    backBtn: { backgroundColor: 'rgba(0,0,0,0.6)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#ff003c' },
++    backBtnText: { color: '#ff003c', fontWeight: 'bold' },
++    roomBadge: { backgroundColor: 'rgba(57, 255, 20, 0.2)', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#39ff14' },
++    roomBadgeText: { color: '#39ff14', fontWeight: 'bold', fontSize: 16, letterSpacing: 2 },
++
++    // Stiluri pentru bara de jos
++    uiContainer: { position: 'absolute', bottom: 30, left: 10, right: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.7)', padding: 15, borderRadius: 15 },
++    palette: { flexDirection: 'row', gap: 10 },
++    colorCircle: { width: 35, height: 35, borderRadius: 18, borderColor: '#fff' },
++    title: { color: 'white', fontWeight: 'bold', fontSize: 14 },
++    statusDot: { width: 10, height: 10, borderRadius: 5 },
++    clearBtn: { backgroundColor: '#ff003c', padding: 10, borderRadius: 8 },
++    clearBtnText: { color: 'white', fontWeight: 'bold' }
+ });
+\ No newline at end of file
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"AutoImportSettings\">\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\n  </component>\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"047501ca-0fe1-451b-bc4e-84366b06ea0a\" name=\"Changes\" comment=\"Add initial WebSocket server and client integration for real-time drawing synchronization\">\n      <change afterPath=\"$PROJECT_DIR$/ItecOverride/app/fight.tsx\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/ItecOverride/app/_layout.tsx\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ItecOverride/app/_layout.tsx\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/ItecOverride/app/index.tsx\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ItecOverride/app/index.tsx\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/ItecOverride/package-lock.json\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ItecOverride/package-lock.json\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/ItecOverride/package.json\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/ItecOverride/package.json\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"EmbeddingIndexingInfo\">\n    <option name=\"cachedIndexableFilesCount\" value=\"36\" />\n    <option name=\"fileBasedEmbeddingIndicesEnabled\" value=\"true\" />\n  </component>\n  <component name=\"FileTemplateManagerImpl\">\n    <option name=\"RECENT_TEMPLATES\">\n      <list>\n        <option value=\"JavaScript File\" />\n      </list>\n    </option>\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"GitHubPullRequestSearchHistory\">{\n  &quot;lastFilter&quot;: {\n    &quot;state&quot;: &quot;OPEN&quot;,\n    &quot;assignee&quot;: &quot;RazvanBontilaO&quot;\n  }\n}</component>\n  <component name=\"GithubPullRequestsUISettings\">{\n  &quot;selectedUrlAndAccountId&quot;: {\n    &quot;url&quot;: &quot;https://github.com/MarcoIsac/Itec_Mobile.git&quot;,\n    &quot;accountId&quot;: &quot;e60dcee4-02cb-4e3d-852c-150358bce672&quot;\n  }\n}</component>\n  <component name=\"HighlightingSettingsPerFile\">\n    <setting file=\"file://$PROJECT_DIR$/ItecOverride/app/index.tsx\" root0=\"SKIP_INSPECTION\" />\n  </component>\n  <component name=\"McpProjectServerCommands\">\n    <commands />\n    <urls />\n  </component>\n  <component name=\"PackageJsonUpdateNotifier\">\n    <dismissed value=\"$PROJECT_DIR$/ItecOverride/package.json\" />\n  </component>\n  <component name=\"ProblemsViewState\">\n    <option name=\"selectedTabId\" value=\"CurrentFile\" />\n  </component>\n  <component name=\"ProjectColorInfo\">{\n  &quot;associatedIndex&quot;: 6,\n  &quot;fromUser&quot;: false\n}</component>\n  <component name=\"ProjectId\" id=\"3BXaWPaHpeXMhqRgAmO6SN7MSEc\" />\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\">{\n  &quot;keyToString&quot;: {\n    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,\n    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,\n    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,\n    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,\n    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,\n    &quot;git-widget-placeholder&quot;: &quot;main&quot;,\n    &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,\n    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,\n    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,\n    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,\n    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,\n    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,\n    &quot;nodejs_interpreter_path&quot;: &quot;/Users/user/Library/Application Support/JetBrains/WebStorm2026.1/node/versions/24.14.1/bin/node&quot;,\n    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,\n    &quot;settings.editor.selected.configurable&quot;: &quot;settings.javascript.runtime&quot;,\n    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,\n    &quot;ts.external.directory.path&quot;: &quot;/Users/user/Desktop/iTEC/ItecOverride/node_modules/typescript/lib&quot;,\n    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;\n  }\n}</component>\n  <component name=\"SharedIndexes\">\n    <attachedChunks>\n      <set>\n        <option value=\"bundled-js-predefined-d6986cc7102b-3bd3a6803838-JavaScript-WS-261.22158.274\" />\n      </set>\n    </attachedChunks>\n  </component>\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"047501ca-0fe1-451b-bc4e-84366b06ea0a\" name=\"Changes\" comment=\"\" />\n      <created>1774637901198</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1774637901198</updated>\n      <workItem from=\"1774637902564\" duration=\"2943000\" />\n      <workItem from=\"1774641184569\" duration=\"1020000\" />\n      <workItem from=\"1774642210871\" duration=\"978000\" />\n      <workItem from=\"1774646090066\" duration=\"1105000\" />\n    </task>\n    <task id=\"LOCAL-00001\" summary=\"Update dependencies and simplify TypeScript configuration\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1774641225922</created>\n      <option name=\"number\" value=\"00001\" />\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1774641225922</updated>\n    </task>\n    <task id=\"LOCAL-00002\" summary=\"Add support for camera and SVG-based drawings with new dependencies\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1774642440594</created>\n      <option name=\"number\" value=\"00002\" />\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1774642440594</updated>\n    </task>\n    <task id=\"LOCAL-00003\" summary=\"Add initial WebSocket server and client integration for real-time drawing synchronization\">\n      <option name=\"closed\" value=\"true\" />\n      <created>1774643166689</created>\n      <option name=\"number\" value=\"00003\" />\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1774643166689</updated>\n    </task>\n    <option name=\"localTasksCounter\" value=\"4\" />\n    <servers />\n  </component>\n  <component name=\"TypeScriptGeneratedFilesManager\">\n    <option name=\"version\" value=\"3\" />\n  </component>\n  <component name=\"Vcs.Log.Tabs.Properties\">\n    <option name=\"TAB_STATES\">\n      <map>\n        <entry key=\"MAIN\">\n          <value>\n            <State />\n          </value>\n        </entry>\n      </map>\n    </option>\n  </component>\n  <component name=\"VcsManagerConfiguration\">\n    <MESSAGE value=\"Update dependencies and simplify TypeScript configuration\" />\n    <MESSAGE value=\"Add support for camera and SVG-based drawings with new dependencies\" />\n    <MESSAGE value=\"Add initial WebSocket server and client integration for real-time drawing synchronization\" />\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"Add initial WebSocket server and client integration for real-time drawing synchronization\" />\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision c354cc1e7d3c4f39a27531f5ef3941ef2745886c)
++++ b/.idea/workspace.xml	(date 1774707321968)
+@@ -4,13 +4,13 @@
+     <option name="autoReloadType" value="SELECTIVE" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Add initial WebSocket server and client integration for real-time drawing synchronization">
+-      <change afterPath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" afterDir="false" />
++    <list default="true" id="047501ca-0fe1-451b-bc4e-84366b06ea0a" name="Changes" comment="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`.">
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/ItecOverride/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/_layout.tsx" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/ItecOverride/app/drawScreen.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/drawScreen.tsx" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/fight.tsx" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/ItecOverride/app/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/index.tsx" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/ItecOverride/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package-lock.json" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/ItecOverride/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/package.json" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/ItecOverride/app/scanner.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/ItecOverride/app/scanner.tsx" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/itec-server/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/itec-server/server.js" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -18,7 +18,7 @@
+     <option name="LAST_RESOLUTION" value="IGNORE" />
+   </component>
+   <component name="EmbeddingIndexingInfo">
+-    <option name="cachedIndexableFilesCount" value="36" />
++    <option name="cachedIndexableFilesCount" value="37" />
+     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
+   </component>
+   <component name="FileTemplateManagerImpl">
+@@ -29,7 +29,13 @@
+     </option>
+   </component>
+   <component name="Git.Settings">
++    <option name="RECENT_BRANCH_BY_REPOSITORY">
++      <map>
++        <entry key="$PROJECT_DIR$" value="main" />
++      </map>
++    </option>
+     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
++    <option name="UPDATE_TYPE" value="REBASE" />
+   </component>
+   <component name="GitHubPullRequestSearchHistory">{
+   &quot;lastFilter&quot;: {
+@@ -44,6 +50,7 @@
+   }
+ }</component>
+   <component name="HighlightingSettingsPerFile">
++    <setting file="file://$PROJECT_DIR$/ItecOverride/app/fight.tsx" root0="SKIP_INSPECTION" />
+     <setting file="file://$PROJECT_DIR$/ItecOverride/app/index.tsx" root0="SKIP_INSPECTION" />
+   </component>
+   <component name="McpProjectServerCommands">
+@@ -77,7 +84,8 @@
+     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+     &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
+     &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
+-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
++    &quot;git-widget-placeholder&quot;: &quot;ImageGeneratorFeature&quot;,
++    &quot;git.auto.fetch.suggestion.counter&quot;: &quot;3&quot;,
+     &quot;javascript.preferred.runtime.type.id&quot;: &quot;node&quot;,
+     &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
+     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+@@ -109,7 +117,8 @@
+       <workItem from="1774637902564" duration="2943000" />
+       <workItem from="1774641184569" duration="1020000" />
+       <workItem from="1774642210871" duration="978000" />
+-      <workItem from="1774646090066" duration="1105000" />
++      <workItem from="1774646090066" duration="1486000" />
++      <workItem from="1774650734635" duration="5019000" />
+     </task>
+     <task id="LOCAL-00001" summary="Update dependencies and simplify TypeScript configuration">
+       <option name="closed" value="true" />
+@@ -135,7 +144,15 @@
+       <option name="project" value="LOCAL" />
+       <updated>1774643166689</updated>
+     </task>
+-    <option name="localTasksCounter" value="4" />
++    <task id="LOCAL-00004" summary="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`.">
++      <option name="closed" value="true" />
++      <created>1774647544444</created>
++      <option name="number" value="00004" />
++      <option name="presentableId" value="LOCAL-00004" />
++      <option name="project" value="LOCAL" />
++      <updated>1774647544444</updated>
++    </task>
++    <option name="localTasksCounter" value="5" />
+     <servers />
+   </component>
+   <component name="TypeScriptGeneratedFilesManager">
+@@ -146,7 +163,19 @@
+       <map>
+         <entry key="MAIN">
+           <value>
+-            <State />
++            <State>
++              <option name="FILTERS">
++                <map>
++                  <entry key="branch">
++                    <value>
++                      <list>
++                        <option value="origin/mod1" />
++                      </list>
++                    </value>
++                  </entry>
++                </map>
++              </option>
++            </State>
+           </value>
+         </entry>
+       </map>
+@@ -156,6 +185,8 @@
+     <MESSAGE value="Update dependencies and simplify TypeScript configuration" />
+     <MESSAGE value="Add support for camera and SVG-based drawings with new dependencies" />
+     <MESSAGE value="Add initial WebSocket server and client integration for real-time drawing synchronization" />
+-    <option name="LAST_COMMIT_MESSAGE" value="Add initial WebSocket server and client integration for real-time drawing synchronization" />
++    <MESSAGE value="Split drawing functionality into a new `fight.tsx` screen and refactor `index.tsx` to simplify navigation. Updated `expo-router` and dependencies." />
++    <MESSAGE value="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`." />
++    <option name="LAST_COMMIT_MESSAGE" value="Split large app into modular files: `fight.tsx` for drawing &amp; sync functionality, and simplified `index.tsx` as a landing page. Updated `expo-router` to `~55.0.8`." />
+   </component>
+ </project>
+\ No newline at end of file
+Index: itec-server/server.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>// server.js\nconst express = require('express');\nconst http = require('http');\nconst { Server } = require(\"socket.io\");\n\nconst app = express();\nconst server = http.createServer(app);\n\n// Configurăm Socket.io cu CORS (ca să permită conexiuni de la telefon)\nconst io = new Server(server, {\n    cors: {\n        origin: \"*\", // Permite orice conexiune (bun pentru hackathon)\n        methods: [\"GET\", \"POST\"]\n    }\n});\n\nlet drawingHistory = []; // Păstrăm tot graffiti-ul aici\n\nio.on('connection', (socket) => {\n    console.log('Un utilizator s-a conectat: ' + socket.id);\n\n    // Când un user se conectează, îi trimitem istoricul desenului existent\n    socket.emit('initHistory', drawingHistory);\n\n    // Ascultăm când cineva termină de desenat o linie nouă\n    socket.on('sendLine', (newLine) => {\n        // Salvăm linia în istoric\n        drawingHistory.push(newLine);\n        // Trimitem linia TUTUROR celorlalți utilizatori conectați (broadcast)\n        socket.broadcast.emit('newLine', newLine);\n        console.log('Linie nouă primită și trimisă mai departe.');\n    });\n\n    // Gestionăm curățarea ecranului\n    socket.on('requestClear', () => {\n        drawingHistory = [];\n        io.emit('clearCanvas'); // Anunțăm pe toată lumea să șteargă\n        console.log('Canvas-ul a fost șters de un utilizator.');\n    });\n\n    socket.on('disconnect', () => {\n        console.log('Un utilizator s-a deconectat.');\n    });\n});\n\n// Pornim serverul pe portul 3000\nconst PORT = 3000;\nserver.listen(PORT, () => {\n    console.log(`Serverul iTEC:OVERRIDE rulează pe http://localhost:${PORT}`);\n});
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/itec-server/server.js b/itec-server/server.js
+--- a/itec-server/server.js	(revision c354cc1e7d3c4f39a27531f5ef3941ef2745886c)
++++ b/itec-server/server.js	(date 1774707176069)
+@@ -1,4 +1,3 @@
+-// server.js
+ const express = require('express');
+ const http = require('http');
+ const { Server } = require("socket.io");
+@@ -6,45 +5,54 @@
+ const app = express();
+ const server = http.createServer(app);
+ 
+-// Configurăm Socket.io cu CORS (ca să permită conexiuni de la telefon)
+ const io = new Server(server, {
+-    cors: {
+-        origin: "*", // Permite orice conexiune (bun pentru hackathon)
+-        methods: ["GET", "POST"]
+-    }
++    cors: { origin: "*", methods: ["GET", "POST"] }
+ });
+ 
+-let drawingHistory = []; // Păstrăm tot graffiti-ul aici
++// Acum stocăm istoricul pe camere (ex: { "PARTER-01": [linie1, linie2], "ETAJ-02": [linie1] })
++let roomsHistory = {};
+ 
+ io.on('connection', (socket) => {
+-    console.log('Un utilizator s-a conectat: ' + socket.id);
++    console.log('User conectat: ' + socket.id);
++
++    // 1. Userul cere să intre într-o cameră (afiș)
++    socket.on('joinRoom', (roomId) => {
++        socket.join(roomId);
++        console.log(`Userul ${socket.id} a intrat în camera/afișul: ${roomId}`);
++
++        // Dacă afișul nu există în memorie, îl creăm
++        if (!roomsHistory[roomId]) {
++            roomsHistory[roomId] = [];
++        }
++
++        // Îi trimitem DOAR istoricul acelui afiș
++        socket.emit('initHistory', roomsHistory[roomId]);
++    });
+ 
+-    // Când un user se conectează, îi trimitem istoricul desenului existent
+-    socket.emit('initHistory', drawingHistory);
++    // 2. Userul desenează ceva pe afișul lui
++    socket.on('sendLine', (data) => {
++        // data conține { line: newLine, roomId: "PARTER-01" }
++        const { line, roomId } = data;
+ 
+-    // Ascultăm când cineva termină de desenat o linie nouă
+-    socket.on('sendLine', (newLine) => {
+-        // Salvăm linia în istoric
+-        drawingHistory.push(newLine);
+-        // Trimitem linia TUTUROR celorlalți utilizatori conectați (broadcast)
+-        socket.broadcast.emit('newLine', newLine);
+-        console.log('Linie nouă primită și trimisă mai departe.');
++        if (roomsHistory[roomId]) {
++            roomsHistory[roomId].push(line);
++            // Trimitem linia DOAR celorlalți useri din aceeași cameră (socket.to)
++            socket.to(roomId).emit('newLine', line);
++        }
+     });
+ 
+-    // Gestionăm curățarea ecranului
+-    socket.on('requestClear', () => {
+-        drawingHistory = [];
+-        io.emit('clearCanvas'); // Anunțăm pe toată lumea să șteargă
+-        console.log('Canvas-ul a fost șters de un utilizator.');
++    // 3. Userul șterge afișul
++    socket.on('requestClear', (roomId) => {
++        roomsHistory[roomId] = [];
++        io.to(roomId).emit('clearCanvas');
++        console.log(`Afișul ${roomId} a fost șters.`);
+     });
+ 
+     socket.on('disconnect', () => {
+-        console.log('Un utilizator s-a deconectat.');
++        console.log('User deconectat: ' + socket.id);
+     });
+ });
+ 
+-// Pornim serverul pe portul 3000
+-const PORT = 3000;
+-server.listen(PORT, () => {
+-    console.log(`Serverul iTEC:OVERRIDE rulează pe http://localhost:${PORT}`);
++server.listen(3000, () => {
++    console.log(`Serverul iTEC cu ROOMS rulează pe http://localhost:3000`);
+ });
+\ No newline at end of file
