@@ -18,20 +18,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const HF_API_KEY = "";
-// Using SDXL-Turbo: it is faster, lighter, and more likely to be available on the free tier
-const MODEL_URL = "https://api-inference.huggingface.co/models/stabilityai/sdxl-turbo";
+// Your Gemini API Key
+const GEMINI_API_KEY = "";
+// Using the FREE gemini-2.5-flash-image model with the generateContent endpoint
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`;
 
 // Key used to store the array of local file paths
 const STICKERS_STORAGE_KEY = '@saved_stickers_paths';
-
-const blobToDataUrl = (blob: Blob) =>
-    new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = () => reject(new Error("Could not process the generated image."));
-        reader.onloadend = () => resolve(String(reader.result ?? ""));
-        reader.readAsDataURL(blob);
-    });
 
 export default function Generator() {
     const router = useRouter();
@@ -40,7 +33,7 @@ export default function Generator() {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
 
-    // Generate image using Hugging Face API
+    // Generate image using Gemini 2.5 Flash Image
     async function generateImage() {
         if (!prompt.trim()) {
             Alert.alert("Missing prompt", "Write a prompt before generating.");
@@ -52,38 +45,52 @@ export default function Generator() {
         Keyboard.dismiss();
 
         try {
-            const response = await fetch(MODEL_URL, {
+            // Append the desired art style to the user's prompt
+            const finalPrompt = `${prompt}, cyberpunk graffiti sticker, neon, highly detailed vector art, solid dark background`;
+
+            // Payload structure for Gemini 2.5 Flash Image using generateContent
+            const requestBody = {
+                contents: [
+                    {
+                        parts: [
+                            { text: finalPrompt }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    // Explicitly tell the model to return an image instead of text
+                    responseModalities: ["IMAGE"]
+                }
+            };
+
+            const response = await fetch(GEMINI_URL, {
+                method: "POST",
                 headers: {
-                    Authorization: `Bearer ${HF_API_KEY}`,
                     "Content-Type": "application/json"
                 },
-                method: "POST",
-                body: JSON.stringify({
-                    inputs: `${prompt}, cyberpunk graffiti sticker, neon, highly detailed vector art`
-                }),
+                body: JSON.stringify(requestBody)
             });
 
-            // Handle cold start
-            if (response.status === 503) {
-                Alert.alert(
-                    "Model is loading",
-                    "The AI is waking up. Press generate again in ~15 seconds!"
-                );
-                setLoading(false);
-                return;
-            }
+            const data = await response.json();
 
-            // Handle deprecated or restricted model
-            if (response.status === 410 || response.status === 403) {
-                throw new Error("API restriction (410/403). Hugging Face might be blocking free access to this model right now.");
-            }
-
+            // Handle errors from Google's API
             if (!response.ok) {
-                throw new Error(`HF error ${response.status}`);
+                throw new Error(data.error?.message || `API error: ${response.status}`);
             }
 
-            const result = await response.blob();
-            const dataUrl = await blobToDataUrl(result);
+            // Navigate the nested response to extract the Base64 image data
+            const part = data.candidates[0].content.parts[0];
+
+            if (!part.inlineData || !part.inlineData.data) {
+                throw new Error("The API did not return valid image data.");
+            }
+
+            const base64Image = part.inlineData.data;
+            const mimeType = part.inlineData.mimeType || "image/jpeg";
+
+            // Format it to be displayable in React Native's Image component
+            const dataUrl = `data:${mimeType};base64,${base64Image}`;
+
             setImageUri(dataUrl);
             setLoading(false);
         } catch (error: any) {
@@ -93,7 +100,7 @@ export default function Generator() {
         }
     }
 
-    // Save the image locally to App Storage (bypass gallery permissions)
+    // Save the image locally to App Storage
     async function saveToLocalAppStorage() {
         if (!imageUri) return;
         setSaving(true);
@@ -103,7 +110,7 @@ export default function Generator() {
             const base64Code = imageUri.split("base64,")[1];
 
             // Create a unique filename
-            const fileName = `sticker_${Date.now()}.png`;
+            const fileName = `sticker_${Date.now()}.jpg`;
 
             // Cast FileSystem to 'any' to bypass the strict TypeScript check for documentDirectory
             const documentDir = (FileSystem as any).documentDirectory;
@@ -138,7 +145,6 @@ export default function Generator() {
 
     return (
         <SafeAreaView style={styles.screen} edges={['top']}>
-            {/* KeyboardAvoidingView wraps everything to push the ScrollView up when typing */}
             <KeyboardAvoidingView
                 style={styles.keyboardAvoid}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -153,8 +159,9 @@ export default function Generator() {
                         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
                             <Text style={styles.backText}>Back</Text>
                         </TouchableOpacity>
+
                         <View style={styles.statusPill}>
-                            <Text style={styles.statusPillText}>Storage: Local App</Text>
+                            <Text style={styles.statusPillText}>API: Gemini 2.5 Flash</Text>
                         </View>
                     </View>
 
@@ -214,156 +221,31 @@ export default function Generator() {
 }
 
 const styles = StyleSheet.create({
-    screen: {
-        backgroundColor: '#020617',
-        flex: 1,
-    },
-    keyboardAvoid: {
-        flex: 1,
-    },
-    container: {
-        flexGrow: 1,
-        padding: 16,
-        paddingBottom: 40, // Extra padding at the bottom for keyboard comfort
-    },
-    topRow: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 12,
-    },
-    backBtn: {
-        backgroundColor: 'rgba(15, 23, 42, 0.88)',
-        borderColor: 'rgba(255,255,255,0.12)',
-        borderRadius: 999,
-        borderWidth: 1,
-        paddingHorizontal: 18,
-        paddingVertical: 10,
-    },
-    backText: {
-        color: '#f8fafc',
-        fontSize: 13,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-    },
-    statusPill: {
-        backgroundColor: 'rgba(8, 47, 73, 0.92)',
-        borderColor: 'rgba(125, 211, 252, 0.28)',
-        borderRadius: 999,
-        borderWidth: 1,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-    },
-    statusPillText: {
-        color: '#bae6fd',
-        fontSize: 12,
-        fontWeight: '700',
-    },
-    headerCard: {
-        backgroundColor: 'rgba(2, 6, 23, 0.82)',
-        borderColor: 'rgba(125, 211, 252, 0.18)',
-        borderRadius: 22,
-        borderWidth: 1,
-        marginBottom: 14,
-        padding: 16,
-    },
-    title: {
-        color: '#f8fafc',
-        fontSize: 26,
-        fontWeight: '800',
-        marginBottom: 6,
-    },
-    subtitle: {
-        color: '#94a3b8',
-        fontSize: 14,
-        lineHeight: 20,
-    },
-    previewBox: {
-        alignItems: 'center',
-        backgroundColor: '#0f172a',
-        borderColor: 'rgba(148, 163, 184, 0.28)',
-        borderRadius: 22,
-        borderWidth: 1,
-        height: 340,
-        justifyContent: 'center',
-        marginBottom: 16,
-        overflow: 'hidden',
-    },
-    img: {
-        height: '100%',
-        width: '100%',
-    },
-    placeholderContainer: {
-        alignItems: 'center',
-        paddingHorizontal: 16,
-    },
-    info: {
-        color: '#cbd5e1',
-        fontSize: 15,
-        fontWeight: '700',
-        textAlign: 'center',
-    },
-    subInfo: {
-        color: '#64748b',
-        fontSize: 13,
-        marginTop: 8,
-        textAlign: 'center',
-    },
-    loadingWrapper: {
-        alignItems: 'center',
-    },
-    loadingText: {
-        color: '#bae6fd',
-        fontSize: 13,
-        fontWeight: '700',
-        marginTop: 12,
-    },
-    inputContainer: {
-        marginBottom: 12,
-    },
-    input: {
-        backgroundColor: '#0f172a',
-        borderColor: '#1e293b',
-        borderRadius: 16,
-        borderWidth: 1,
-        color: '#f8fafc',
-        fontSize: 15,
-        minHeight: 80,
-        padding: 14,
-        textAlignVertical: 'top',
-    },
-    actionRow: {
-        flexDirection: 'row',
-        marginBottom: 12,
-    },
-    actionBtn: {
-        alignItems: 'center',
-        borderRadius: 16,
-        justifyContent: 'center',
-        paddingVertical: 14,
-    },
-    genBtn: {
-        backgroundColor: '#2563eb',
-        flex: 1,
-    },
-    genText: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '700',
-    },
-    saveBtn: {
-        alignItems: 'center',
-        backgroundColor: '#16a34a',
-        borderRadius: 16,
-        justifyContent: 'center',
-        paddingVertical: 14,
-    },
-    saveTextPrimary: {
-        color: '#fff',
-        fontSize: 15,
-        fontWeight: '700',
-    },
-    disabledBtn: {
-        opacity: 0.55,
-    },
+    screen: { backgroundColor: '#020617', flex: 1 },
+    keyboardAvoid: { flex: 1 },
+    container: { flexGrow: 1, padding: 16, paddingBottom: 40 },
+    topRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+    backBtn: { backgroundColor: 'rgba(15, 23, 42, 0.88)', borderColor: 'rgba(255,255,255,0.12)', borderRadius: 999, borderWidth: 1, paddingHorizontal: 18, paddingVertical: 10 },
+    backText: { color: '#f8fafc', fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
+    statusPill: { backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: 'rgba(56, 189, 248, 0.4)', borderRadius: 999, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
+    statusPillText: { color: '#bae6fd', fontSize: 13, fontWeight: '700' },
+    headerCard: { backgroundColor: 'rgba(2, 6, 23, 0.82)', borderColor: 'rgba(125, 211, 252, 0.18)', borderRadius: 22, borderWidth: 1, marginBottom: 14, padding: 16 },
+    title: { color: '#f8fafc', fontSize: 26, fontWeight: '800', marginBottom: 6 },
+    subtitle: { color: '#94a3b8', fontSize: 14, lineHeight: 20 },
+    previewBox: { alignItems: 'center', backgroundColor: '#0f172a', borderColor: 'rgba(148, 163, 184, 0.28)', borderRadius: 22, borderWidth: 1, height: 340, justifyContent: 'center', marginBottom: 16, overflow: 'hidden' },
+    img: { height: '100%', width: '100%' },
+    placeholderContainer: { alignItems: 'center', paddingHorizontal: 16 },
+    info: { color: '#cbd5e1', fontSize: 15, fontWeight: '700', textAlign: 'center' },
+    subInfo: { color: '#64748b', fontSize: 13, marginTop: 8, textAlign: 'center' },
+    loadingWrapper: { alignItems: 'center' },
+    loadingText: { color: '#bae6fd', fontSize: 13, fontWeight: '700', marginTop: 12 },
+    inputContainer: { marginBottom: 12 },
+    input: { backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: 16, borderWidth: 1, color: '#f8fafc', fontSize: 15, minHeight: 80, padding: 14, textAlignVertical: 'top' },
+    actionRow: { flexDirection: 'row', marginBottom: 12 },
+    actionBtn: { alignItems: 'center', borderRadius: 16, justifyContent: 'center', paddingVertical: 14 },
+    genBtn: { backgroundColor: '#2563eb', flex: 1 },
+    genText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+    saveBtn: { alignItems: 'center', backgroundColor: '#16a34a', borderRadius: 16, justifyContent: 'center', paddingVertical: 14 },
+    saveTextPrimary: { color: '#fff', fontSize: 15, fontWeight: '700' },
+    disabledBtn: { opacity: 0.55 },
 });
